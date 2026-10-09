@@ -123,6 +123,7 @@ func FuzzPolicyComposition(f *testing.F) {
 		{"a/b/build/x", false}, {"", false}, {"/abs", false}, {"a//b", false},
 		{"..", false}, {"a/./b", false}, {"a/", true}, {"a\x00b", false},
 		{"A/B/X.LOG", false}, {"a/b/", true}, {"\\back\\slash", false},
+		{"a/b/😀.tmp", false}, {"a/b/café.log", false}, {"a/#name", false},
 	}
 	for _, s := range seeds {
 		f.Add(s.path, s.isDir)
@@ -248,6 +249,9 @@ func FuzzCompileArbitrary(f *testing.F) {
 	f.Add([]byte("*.log\n!keep\n"), "x.log", byte(0))
 	f.Add([]byte("\x00\n"), "a", byte(255))
 	f.Add([]byte("[a-\n]\\"), "]", byte(7))
+	f.Add([]byte("/cache/*\n!/cache/keep/\n/cache/keep/*\n!/cache/keep/README.md\n"), "cache/keep/README.md", byte(0))
+	f.Add([]byte("[[:digit:]A-F][![:digit:]].dat\n"), "Aq.dat", byte(4))
+	f.Add([]byte("report\\[final\\].txt\ntail\\ \\ \n"), "report[final].txt", byte(8))
 	f.Fuzz(func(t *testing.T, data []byte, path string, mode byte) {
 		if len(data) > 4096 || len(path) > 512 {
 			return

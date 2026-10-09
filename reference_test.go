@@ -243,6 +243,8 @@ func FuzzPatternEquivalence(f *testing.F) {
 func FuzzParserOwnership(f *testing.F) {
 	f.Add([]byte("\xef\xbb\xbfa/**\r\n!a/keep\n"))
 	f.Add([]byte("bad[\n\\ "))
+	f.Add([]byte("*secret\n!\\!secret\nreport\\[final\\].txt\n"))
+	f.Add([]byte("[[:digit:]A-F][![:digit:]].dat\n????.tmp\n"))
 	f.Fuzz(func(t *testing.T, data []byte) {
 		if len(data) > 4096 {
 			return

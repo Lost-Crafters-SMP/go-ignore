@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "origin": "Independent project-authored combinations and negative controls; Git is the external oracle",
+  "cases": [
+    {"id":"escaped-brackets","files":{".gitignore":"report\\[final\\].txt\n"},"query":{"Path":"report[final].txt"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"report\\[final\\].txt"}},
+    {"id":"escaped-brackets-control","files":{".gitignore":"report\\[final\\].txt\n"},"query":{"Path":"reportf.txt"},"expected":{"Ignored":false,"Source":"","Line":0,"Pattern":""}},
+    {"id":"leading-space-not-comment","files":{".gitignore":" #note\n"},"query":{"Path":" #note"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":" #note"}},
+    {"id":"inline-hash-not-comment","files":{".gitignore":"release#old\n"},"query":{"Path":"release#old"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"release#old"}},
+    {"id":"escaped-bang-negation","files":{".gitignore":"*secret\n!\\!secret\n"},"query":{"Path":"!secret"},"expected":{"Ignored":false,"Source":".gitignore","Line":2,"Pattern":"!\\!secret"}},
+    {"id":"combined-posix-class","files":{".gitignore":"[[:digit:]A-F][![:digit:]].dat\n"},"query":{"Path":"Aq.dat"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"[[:digit:]A-F][![:digit:]].dat"}},
+    {"id":"combined-posix-class-control","files":{".gitignore":"[[:digit:]A-F][![:digit:]].dat\n"},"query":{"Path":"A7.dat"},"expected":{"Ignored":false,"Source":"","Line":0,"Pattern":""}},
+    {"id":"wildcard-dotfile","files":{".gitignore":"*.[oa]\n"},"query":{"Path":"src/.hidden.o"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"*.[oa]"}},
+    {"id":"single-star-depth-control","files":{".gitignore":"/src/*.o\n"},"query":{"Path":"src/lib/main.o"},"expected":{"Ignored":false,"Source":"","Line":0,"Pattern":""}},
+    {"id":"double-star-depth-hit","files":{".gitignore":"/src/**/*.o\n"},"query":{"Path":"src/lib/main.o"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"/src/**/*.o"}},
+    {"id":"four-byte-question-hit","files":{".gitignore":"????.tmp\n"},"query":{"Path":"😀.tmp"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"????.tmp"}},
+    {"id":"four-byte-question-control","files":{".gitignore":"???.tmp\n"},"query":{"Path":"😀.tmp"},"expected":{"Ignored":false,"Source":"","Line":0,"Pattern":""}},
+    {"id":"unicode-not-normalized","files":{".gitignore":"café.log\n"},"query":{"Path":"café.log"},"expected":{"Ignored":false,"Source":"","Line":0,"Pattern":""}},
+    {"id":"reopened-directory-leaf","files":{".gitignore":"/cache/*\n!/cache/keep/\n/cache/keep/*\n!/cache/keep/README.md\n"},"query":{"Path":"cache/keep/README.md"},"expected":{"Ignored":false,"Source":".gitignore","Line":4,"Pattern":"!/cache/keep/README.md"}},
+    {"id":"reopened-directory-sibling","files":{".gitignore":"/cache/*\n!/cache/keep/\n/cache/keep/*\n!/cache/keep/README.md\n"},"query":{"Path":"cache/keep/private.txt"},"expected":{"Ignored":true,"Source":".gitignore","Line":3,"Pattern":"/cache/keep/*"}},
+    {"id":"unreopened-directory-block","files":{".gitignore":"/cache/*\n!/cache/keep/\n/cache/keep/*\n!/cache/keep/README.md\n"},"query":{"Path":"cache/drop/README.md"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"/cache/*"},"block":{"Directory":"cache/drop","Source":".gitignore","Line":1,"Pattern":"/cache/*"}},
+    {"id":"nested-root-anchor-hit","files":{".gitignore":"*.tmp\n","pkg/.gitignore":"!/keep.tmp\n"},"query":{"Path":"pkg/keep.tmp"},"expected":{"Ignored":false,"Source":"pkg/.gitignore","Line":1,"Pattern":"!/keep.tmp"}},
+    {"id":"nested-root-anchor-control","files":{".gitignore":"*.tmp\n","pkg/.gitignore":"!/keep.tmp\n"},"query":{"Path":"pkg/deep/keep.tmp"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"*.tmp"}},
+    {"id":"nested-directory-only-file-control","files":{"pkg/.gitignore":"/generated/\n"},"query":{"Path":"pkg/generated"},"expected":{"Ignored":false,"Source":"","Line":0,"Pattern":""}},
+    {"id":"nested-directory-only-hit","files":{"pkg/.gitignore":"/generated/\n"},"query":{"Path":"pkg/generated","IsDir":true},"expected":{"Ignored":true,"Source":"pkg/.gitignore","Line":1,"Pattern":"/generated/"}},
+    {"id":"nested-directory-only-block","files":{"pkg/.gitignore":"/generated/\n!generated/keep\n"},"query":{"Path":"pkg/generated/keep"},"expected":{"Ignored":true,"Source":"pkg/.gitignore","Line":1,"Pattern":"/generated/"},"block":{"Directory":"pkg/generated","Source":"pkg/.gitignore","Line":1,"Pattern":"/generated/"}},
+    {"id":"repeated-trailing-escaped-spaces","files":{".gitignore":"tail\\ \\ \n"},"query":{"Path":"tail  "},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"tail\\ \\ "}},
+    {"id":"tab-in-path","files":{".gitignore":"name\tpart\n"},"query":{"Path":"name\tpart"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"name\tpart"}},
+    {"id":"newline-in-path","files":{".gitignore":"name?part\n"},"query":{"Path":"name\npart"},"expected":{"Ignored":true,"Source":".gitignore","Line":1,"Pattern":"name?part"}}
+  ]
+}

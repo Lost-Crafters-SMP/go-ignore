@@ -248,6 +248,43 @@ func TestLiveGitLayeredPolicy(t *testing.T) {
 				{"temp", true},
 			},
 		},
+		{
+			id:     "lower-layer-directory-reopened",
+			global: "cache/\n*.log\n",
+			info:   "!cache/\ncache/*\n!cache/keep/\n",
+			files: map[string]string{
+				".gitignore":            "!cache/keep/*.log\n",
+				"cache/keep/.gitignore": "*.tmp\n!important.tmp\n",
+				"cache/drop/.gitignore": "!rescue\n",
+			},
+			queries: []struct {
+				path  string
+				isDir bool
+			}{
+				{"cache", true}, {"cache/keep", true},
+				{"cache/keep/output.log", false}, {"cache/keep/output.tmp", false},
+				{"cache/keep/important.tmp", false}, {"cache/drop/rescue", false},
+			},
+		},
+		{
+			id:     "three-directory-scopes",
+			global: "*.dat\n",
+			info:   "!keep.dat\n",
+			files: map[string]string{
+				".gitignore":       "*.dat\n",
+				"a/.gitignore":     "!keep.dat\n",
+				"a/b/.gitignore":   "/keep.dat\n!/local.dat\n",
+				"other/.gitignore": "!*.dat\n",
+			},
+			queries: []struct {
+				path  string
+				isDir bool
+			}{
+				{"keep.dat", false}, {"a/keep.dat", false}, {"a/b/keep.dat", false},
+				{"a/b/deep/keep.dat", false}, {"a/b/local.dat", false},
+				{"a/b/deep/local.dat", false}, {"other/keep.dat", false},
+			},
+		},
 	}
 	for _, fold := range []bool{false, true} {
 		for _, c := range cases {
@@ -316,10 +353,16 @@ func TestLiveGitWalkerPruning(t *testing.T) {
 		"deep/a/b/c.log": "",
 	}
 	o := newLayeredOracle(t, files, "*.bak\n", "secret-*\n", false)
+	checkLiveGitWalker(t, o)
+}
+
+func checkLiveGitWalker(t *testing.T, o *layeredOracle) {
+	t.Helper()
 	p, err := NewPolicy(PolicyOptions{
 		Root:     o.dir,
 		Sources:  layeredSpecs(),
 		Reserved: []string{".git"},
+		Options:  Options{CaseFold: o.fold},
 	})
 	if err != nil {
 		t.Fatal(err)
