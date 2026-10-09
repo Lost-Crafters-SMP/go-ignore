@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -100,6 +101,66 @@ func BenchmarkPolicyMatch(b *testing.B) {
 			}
 		})
 	}
+}
+
+// BenchmarkPolicyDeepChain profiles cumulative matcher recompilation at
+// increasing nesting depths: each directory's matcher recompiles every
+// ancestor source, so cold discovery scales quadratically in depth. The
+// Raw benchmark records capture the measured cold-discovery scaling.
+func BenchmarkPolicyDeepChain(b *testing.B) {
+	for _, depth := range []int{8, 16, 32, 64, 128} {
+		b.Run(fmt.Sprintf("depth=%d/cold", depth), func(b *testing.B) {
+			root := b.TempDir()
+			dir := root
+			for range depth {
+				dir = filepath.Join(dir, "d")
+				if err := os.MkdirAll(dir, 0o755); err != nil {
+					b.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, ".custom"), []byte("/lit-a\n*.gen\ncache/\n**/w*.gen\nsub-thing\n"), 0o644); err != nil {
+					b.Fatal(err)
+				}
+			}
+			deepest := strings.Repeat("d/", depth) + "plain.txt"
+			specs := benchSpecs()
+			b.ReportAllocs()
+			b.ResetTimer()
+			for b.Loop() {
+				p, err := NewPolicy(PolicyOptions{Root: root, Sources: specs})
+				if err != nil {
+					b.Fatal(err)
+				}
+				if _, err := p.Match(deepest, false); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
+	b.Run("depth=128/warm", func(b *testing.B) {
+		root := b.TempDir()
+		dir := root
+		for range 128 {
+			dir = filepath.Join(dir, "d")
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				b.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(dir, ".custom"), []byte("/lit-a\n*.gen\ncache/\n**/w*.gen\nsub-thing\n"), 0o644); err != nil {
+				b.Fatal(err)
+			}
+		}
+		p, err := NewPolicy(PolicyOptions{Root: root, Sources: benchSpecs()})
+		if err != nil {
+			b.Fatal(err)
+		}
+		deepest := strings.Repeat("d/", 128) + "plain.txt"
+		b.ReportAllocs()
+		b.ResetTimer()
+		for b.Loop() {
+			if _, err := p.Match(deepest, false); err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
 }
 
 func BenchmarkPolicyWalk(b *testing.B) {

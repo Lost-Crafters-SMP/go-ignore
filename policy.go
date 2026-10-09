@@ -281,7 +281,10 @@ func (p *Policy) dirLocked(dir string) (*dirPolicy, error) {
 		full := filepath.Join(p.root, filepath.FromSlash(dir), filepath.FromSlash(spec.Filename))
 		data, err := os.ReadFile(full)
 		if err != nil {
-			if errors.Is(err, fs.ErrNotExist) && spec.Optional {
+			// Optional sources are absent when the directory does not exist
+			// or can never exist on this platform; hypothetical query paths
+			// stay answerable. Required sources still report the failure.
+			if spec.Optional && (errors.Is(err, fs.ErrNotExist) || pathCannotExist(err)) {
 				continue
 			}
 			err = fmt.Errorf("read %s: %w", sourceLabel(dir, spec.Filename), err)
