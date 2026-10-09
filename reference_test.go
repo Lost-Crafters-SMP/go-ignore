@@ -208,7 +208,7 @@ func TestMillionReferenceComparisons(t *testing.T) {
 		for range 100 {
 			text := generatedText(rng)
 			want := valid && re.MatchString(byteRunes(text, fold))
-			got := err == nil && runProgram(program, text, false, fold)
+			got := err == nil && runProgram(program, text, false, fold, nil)
 			if got != want {
 				t.Fatalf("neutral counterexample pattern=%q text=%q fold=%v got=%v want=%v", pattern, text, fold, got, want)
 			}
@@ -233,7 +233,7 @@ func FuzzPatternEquivalence(f *testing.F) {
 			t.Fatalf("validity %q %v %v", pattern, valid, err)
 		}
 		want := valid && re.MatchString(byteRunes(text, fold))
-		got := err == nil && runProgram(program, text, false, fold)
+		got := err == nil && runProgram(program, text, false, fold, nil)
 		if got != want {
 			t.Fatalf("pattern=%q text=%q fold=%v got=%v want=%v", pattern, text, fold, got, want)
 		}

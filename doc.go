@@ -9,6 +9,8 @@
 // exclusions establish a Block. A directory endpoint exclusion is not a pruning
 // decision for a future walker. CaseFold performs ASCII-only folding.
 //
-// The behavioural specification and regression fixtures are in docs/spec/.
+// Compile builds a per-scope literal index and a priority-ordered wildcard
+// list; ordinary short matches allocate nothing. The behavioural
+// specification and regression fixtures are in docs/spec/.
 
 package ignore

@@ -35,7 +35,7 @@ func TestAdversaryWorker(t *testing.T) {
 	}
 	start := time.Now()
 	for range 2000 {
-		if runProgram(program, path, false, false) {
+		if runProgram(program, path, false, false, nil) {
 			t.Fatal("near miss matched")
 		}
 	}

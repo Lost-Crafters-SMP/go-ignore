@@ -73,6 +73,47 @@ type Rule struct {
 	line, rank, depth, sequence         int
 	negated, dirOnly, anchored, invalid bool
 	program                             []instruction
+	idx, scopeID                        int32
+	// head and tail are the literal runs bounding the wildcards of a scanned
+	// rule; any matching candidate must start and end with them.
+	head, tail string
+}
+
+// idxNone marks absent index entries.
+const idxNone = -1
+
+// litEntry records the best exact-match literal rule per key, split by
+// directory-only applicability so winner can honour isDir without scanning.
+type litEntry struct {
+	plain int32 // best non-dirOnly rule, idxNone if none
+	dir   int32 // best dirOnly rule, idxNone if none
+}
+
+func (e litEntry) pick(isDir bool) int32 {
+	if isDir && e.dir > e.plain {
+		return e.dir
+	}
+	return e.plain
+}
+
+// scopeGroup indexes the exact-match literal rules of one source scope. Rules
+// anchored to the scope are keyed by their scope-relative path; bare-name rules
+// are keyed by the candidate basename, which is scope-independent.
+type scopeGroup struct {
+	scope    string
+	strip    int // len(scope)+1, or 0 for the root scope
+	anchored map[string]litEntry
+	base     map[string]litEntry
+}
+
+// eligible reports whether a non-slash candidate path lies inside the scope.
+func (g *scopeGroup) eligible(path string, fold bool) bool {
+	return g.scope == "" || scopeEligible(path, g.scope, fold)
+}
+
+// scopeEligible is the per-rule equivalent of scopeGroup.eligible.
+func scopeEligible(path, scope string, fold bool) bool {
+	return len(path) > len(scope) && path[len(scope)] == '/' && equalBytes(path[:len(scope)], scope, fold)
 }
 
 // Source returns the source label.
@@ -120,6 +161,11 @@ type Matcher struct {
 	rules       []*Rule
 	diagnostics []Diagnostic
 	fold        bool
+	// scopes indexes exact-match literal rules per source scope; wild lists the
+	// remaining evaluable rules in ascending priority order. Both are built once
+	// during Compile and only read afterwards.
+	scopes []scopeGroup
+	wild   []int32
 }
 
 func validatePath(path string, root bool) error {
@@ -195,16 +241,33 @@ func Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error) {
 		}
 	}
 	slices.SortStableFunc(m.rules, func(a, b *Rule) int {
-		for _, pair := range [][2]int{{a.rank, b.rank}, {a.depth, b.depth}, {a.sequence, b.sequence}, {a.line, b.line}} {
-			if pair[0] < pair[1] {
+		if a.rank != b.rank {
+			if a.rank < b.rank {
 				return -1
 			}
-			if pair[0] > pair[1] {
-				return 1
+			return 1
+		}
+		if a.depth != b.depth {
+			if a.depth < b.depth {
+				return -1
 			}
+			return 1
+		}
+		if a.sequence != b.sequence {
+			if a.sequence < b.sequence {
+				return -1
+			}
+			return 1
+		}
+		if a.line != b.line {
+			if a.line < b.line {
+				return -1
+			}
+			return 1
 		}
 		return 0
 	})
+	m.buildIndex()
 	slices.SortStableFunc(m.diagnostics, func(a, b Diagnostic) int {
 		if order := strings.Compare(a.Source, b.Source); order != 0 {
 			return order
@@ -235,6 +298,114 @@ func trimSpaces(raw string) string {
 	return raw[:end]
 }
 
+// isLiteralProgram reports whether a program is a single literal run (or empty),
+// so its candidate test is exact equality and it can be served by the index.
+func isLiteralProgram(program []instruction) bool {
+	return len(program) == 0 || (len(program) == 1 && program[0].kind == literal)
+}
+
+// buildIndex populates the literal index and the scanned-candidate list from the
+// priority-sorted rules. Maps keep the highest-priority rule per key; the wild
+// list keeps ascending priority order so winner can scan it in reverse and stop
+// at the indexed lower bound. Invalid rules match nothing and are dropped.
+func (m *Matcher) buildIndex() {
+	scopeOf := make(map[string]int32)
+	for i, r := range m.rules {
+		r.idx = int32(i)
+		if r.invalid {
+			continue
+		}
+		gi, ok := scopeOf[r.scope]
+		if !ok {
+			gi = int32(len(m.scopes))
+			scopeOf[r.scope] = gi
+			strip := 0
+			if r.scope != "" {
+				strip = len(r.scope) + 1
+			}
+			m.scopes = append(m.scopes, scopeGroup{scope: r.scope, strip: strip})
+		}
+		r.scopeID = gi
+		if !isLiteralProgram(r.program) {
+			m.wild = append(m.wild, r.idx)
+			r.head, r.tail = literalBounds(r.program)
+		}
+	}
+	// Presize the exact-match maps per scope to avoid repeated map growth.
+	anchoredCount := make([]int, len(m.scopes))
+	baseCount := make([]int, len(m.scopes))
+	for _, r := range m.rules {
+		if r.invalid || !isLiteralProgram(r.program) {
+			continue
+		}
+		if r.anchored {
+			anchoredCount[r.scopeID]++
+		} else {
+			baseCount[r.scopeID]++
+		}
+	}
+	for gi := range m.scopes {
+		m.scopes[gi].anchored = make(map[string]litEntry, anchoredCount[gi])
+		m.scopes[gi].base = make(map[string]litEntry, baseCount[gi])
+	}
+	for _, r := range m.rules {
+		if r.invalid || !isLiteralProgram(r.program) {
+			continue
+		}
+		key := ""
+		if len(r.program) == 1 {
+			key = r.program[0].text
+		}
+		if m.fold {
+			key = foldKeyString(key)
+		}
+		group := &m.scopes[r.scopeID]
+		index := group.base
+		if r.anchored {
+			index = group.anchored
+		}
+		entry, ok := index[key]
+		if !ok {
+			entry = litEntry{plain: idxNone, dir: idxNone}
+		}
+		if r.dirOnly {
+			entry.dir = r.idx
+		} else {
+			entry.plain = r.idx
+		}
+		index[key] = entry
+	}
+}
+
+// literalBounds returns the literal runs a wildcard program starts and ends
+// with; matches must begin and end with them. Adjacent escape-merged runs are
+// not joined, keeping the bounds conservative but valid.
+func literalBounds(program []instruction) (head, tail string) {
+	if len(program) > 1 {
+		if program[0].kind == literal {
+			head = program[0].text
+		}
+		if program[len(program)-1].kind == literal {
+			tail = program[len(program)-1].text
+		}
+	}
+	return head, tail
+}
+
+// foldKeyString folds pattern text for index keys.
+func foldKeyString(s string) string {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 'A' && s[i] <= 'Z' {
+			folded := []byte(s)
+			for j := i; j < len(folded); j++ {
+				folded[j] = foldByte(folded[j], true)
+			}
+			return string(folded)
+		}
+	}
+	return s
+}
+
 // Diagnostics returns a detached copy sorted by source label, line, and kind,
 // with stable input-source sequence breaking ties.
 func (m *Matcher) Diagnostics() []Diagnostic {
@@ -252,16 +423,17 @@ func (m *Matcher) Match(path string, isDir bool) (Decision, error) {
 	if err := validatePath(path, false); err != nil {
 		return Decision{}, fmt.Errorf("path: %w", err)
 	}
+	var scratch evalScratch
 	for i := 0; i < len(path); i++ {
 		if path[i] == '/' {
-			if r := m.winner(path[:i], true, false); r != nil && !r.negated {
+			if r := m.winner(path[:i], true, false, &scratch); r != nil && !r.negated {
 				return Decision{Block: &Block{Directory: path[:i], Rule: r}}, nil
 			}
 		}
 	}
-	r := m.winner(path, isDir, false)
+	r := m.winner(path, isDir, false, &scratch)
 	if isDir && (r == nil || r.negated) {
-		r = m.winner(path, true, true)
+		r = m.winner(path, true, true, &scratch)
 	}
 	if r == nil {
 		return Decision{}, nil
@@ -273,7 +445,117 @@ func (m *Matcher) Match(path string, isDir bool) (Decision, error) {
 	return Decision{Action: action, Rule: r}, nil
 }
 
-func (m *Matcher) winner(path string, isDir, slash bool) *Rule {
+// lookupLiteral resolves an exact-match key, folding it first when needed. The
+// buffer is reused across lookups so folded candidates avoid repeated allocation.
+func lookupLiteral(index map[string]litEntry, key string, fold bool, buf []byte) (litEntry, bool, []byte) {
+	if !fold {
+		entry, ok := index[key]
+		return entry, ok, buf
+	}
+	at := -1
+	for i := 0; i < len(key); i++ {
+		if key[i] >= 'A' && key[i] <= 'Z' {
+			at = i
+			break
+		}
+	}
+	if at < 0 {
+		entry, ok := index[key]
+		return entry, ok, buf
+	}
+	if cap(buf) < len(key) {
+		buf = make([]byte, len(key))
+	}
+	folded := buf[:len(key)]
+	copy(folded, key)
+	for i := at; i < len(folded); i++ {
+		folded[i] = foldByte(folded[i], true)
+	}
+	entry, ok := index[string(folded)]
+	return entry, ok, buf
+}
+
+// winner returns the highest-priority matching rule. Non-slash calls use the
+// literal index: exact-match rules are resolved per eligible scope, and only
+// wildcard candidates ranked above the best literal hit are scanned.
+func (m *Matcher) winner(path string, isDir, slash bool, scratch *evalScratch) *Rule {
+	if scratch == nil {
+		scratch = new(evalScratch)
+	}
+	if slash {
+		return m.scanWinner(path, isDir, true, scratch)
+	}
+	at := strings.LastIndexByte(path, '/')
+	base := path[at+1:]
+	best := int32(idxNone)
+	var bestRule *Rule
+	buf := scratch.fold[:0]
+	elig := scratch.eligibility(len(m.scopes))
+	for gi := range m.scopes {
+		g := &m.scopes[gi]
+		ok := g.eligible(path, m.fold)
+		elig[gi] = ok
+		if !ok {
+			continue
+		}
+		var entry litEntry
+		var hit bool
+		if len(g.anchored) > 0 {
+			entry, hit, buf = lookupLiteral(g.anchored, path[g.strip:], m.fold, buf)
+			if hit {
+				if idx := entry.pick(isDir); idx > best {
+					best, bestRule = idx, m.rules[idx]
+				}
+			}
+		}
+		if len(g.base) > 0 {
+			entry, hit, buf = lookupLiteral(g.base, base, m.fold, buf)
+			if hit {
+				if idx := entry.pick(isDir); idx > best {
+					best, bestRule = idx, m.rules[idx]
+				}
+			}
+		}
+	}
+	for i := len(m.wild) - 1; i >= 0; i-- {
+		idx := m.wild[i]
+		if idx <= best {
+			break
+		}
+		r := m.rules[idx]
+		if r.dirOnly && !isDir {
+			continue
+		}
+		if !elig[r.scopeID] {
+			continue
+		}
+		rel := path
+		if r.scope != "" {
+			rel = path[len(r.scope)+1:]
+		}
+		if !r.anchored {
+			rel = base
+		}
+		if r.head != "" && (len(rel) < len(r.head) || !equalBytes(rel[:len(r.head)], r.head, m.fold)) {
+			continue
+		}
+		if r.tail != "" && (len(rel) < len(r.tail) || !equalBytes(rel[len(rel)-len(r.tail):], r.tail, m.fold)) {
+			continue
+		}
+		if runProgram(r.program, rel, false, m.fold, scratch) {
+			return r
+		}
+	}
+	return bestRule
+}
+
+// scanWinner is the exhaustive reverse-priority scan. It serves the directory
+// slash-form endpoint call, whose virtual trailing separator defeats exact-match
+// lookup, and acts as the differential reference for the indexed path.
+func (m *Matcher) scanWinner(path string, isDir, slash bool, scratch *evalScratch) *Rule {
+	if scratch == nil {
+		scratch = new(evalScratch)
+	}
 	for i := len(m.rules) - 1; i >= 0; i-- {
 		r := m.rules[i]
 		if r.invalid || (r.dirOnly && !isDir) {
@@ -303,7 +585,7 @@ func (m *Matcher) winner(path string, isDir, slash bool) *Rule {
 				rel = rel[at+1:]
 			}
 		}
-		if runProgram(r.program, rel, slash && r.anchored && rel != "", m.fold) {
+		if runProgram(r.program, rel, slash && r.anchored && rel != "", m.fold, scratch) {
 			return r
 		}
 	}

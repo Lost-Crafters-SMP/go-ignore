@@ -78,12 +78,27 @@ func compilePattern(pattern string, fold bool) ([]instruction, error) {
 			program = append(program, instruction{kind: byteClass, set: set})
 			i = end
 		default:
-			text.WriteByte(b)
-			i++
+			// Escape-free plain runs are emitted as substring views of the
+			// pattern, avoiding a copy per rule; runs that follow escapes
+			// still merge through the builder.
+			end := i + 1
+			for end < len(pattern) && !isMeta(pattern[end]) {
+				end++
+			}
+			if text.Len() == 0 {
+				program = append(program, instruction{kind: literal, text: pattern[i:end]})
+			} else {
+				text.WriteString(pattern[i:end])
+			}
+			i = end
 		}
 	}
 	flush()
 	return program, nil
+}
+
+func isMeta(b byte) bool {
+	return b == '\\' || b == '*' || b == '?' || b == '['
 }
 
 func addMember(set *[4]uint64, b byte, fold bool) {
@@ -201,10 +216,48 @@ func posixMember(name string, b byte) bool {
 	return false
 }
 
+// evalScratch carries reusable evaluation state for one Match call. Matchers are
+// shared across goroutines; scratch is strictly call-local, so reuse introduces
+// no shared mutable state.
+type evalScratch struct {
+	rows [2][]bool
+	fold [256]byte
+	// elig caches per-scope-group eligibility across the ancestor calls of one
+	// Match, backed by fixed storage for common scope counts.
+	eligFixed [64]bool
+	elig      []bool
+}
+
+// eligibility returns a reusable per-scope-group eligibility slice.
+func (s *evalScratch) eligibility(n int) []bool {
+	if n <= len(s.eligFixed) {
+		return s.eligFixed[:n]
+	}
+	if len(s.elig) < n {
+		s.elig = make([]bool, n)
+	}
+	return s.elig[:n]
+}
+
+// rowsFor returns reachability rows sized for n+1 positions, reusing grown
+// scratch across the rule evaluations of a single Match. The caller clears the
+// active row before use.
+func (s *evalScratch) rowsFor(n int) (a, b []bool) {
+	if cap(s.rows[0]) < n+1 {
+		size := n + 1
+		if size < 2*cap(s.rows[0]) {
+			size = 2 * cap(s.rows[0])
+		}
+		s.rows[0] = make([]bool, size)
+		s.rows[1] = make([]bool, size)
+	}
+	return s.rows[0][:n+1], s.rows[1][:n+1]
+}
+
 // runProgram uses two reachability rows and never recurses. A literal transition
 // costs its run length; wildcard closure is a single forward pass per instruction.
 // Time is O((compiled units + literal bytes)*candidate bytes), scratch O(candidate).
-func runProgram(program []instruction, path string, slash, fold bool) bool {
+func runProgram(program []instruction, path string, slash, fold bool, scratch *evalScratch) bool {
 	n := len(path)
 	if slash {
 		n++
@@ -228,10 +281,13 @@ func runProgram(program []instruction, path string, slash, fold bool) bool {
 	if n < len(fixed[0]) {
 		a = fixed[0][:n+1]
 		b = fixed[1][:n+1]
+	} else if scratch != nil {
+		a, b = scratch.rowsFor(n)
 	} else {
 		a = make([]bool, n+1)
 		b = make([]bool, n+1)
 	}
+	clear(a)
 	a[0] = true
 	get := func(i int) byte {
 		if i == len(path) {
