@@ -13,10 +13,8 @@ import (
 	"testing"
 )
 
-// platform-specific tests: cases that require POSIX filename
-// freedom or Unix permission semantics. These run under the Linux
-// Linux test run and document legitimate platform differences
-// rather than weakening portable tests.
+// Platform-specific tests require POSIX filename freedom or Unix permission
+// semantics, covering platform differences without weakening portable tests.
 
 // TestPolicyUnixFilenames exercises characters that cannot appear in Windows
 // filenames, as rule text and as materialized paths.

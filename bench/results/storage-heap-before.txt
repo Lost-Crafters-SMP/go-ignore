@@ -1,0 +1,31 @@
+File: memory-before.exe
+Build ID: C:\Users\seanl\AppData\Local\Temp\opencode\memory-before.exe2026-10-09 19:06:40.8502686 +0100 BST
+Type: inuse_space
+Time: 2026-10-09 19:06:52 BST
+Showing nodes accounting for 5812384B, 99.57% of 5837752B total
+Dropped 67 nodes (cum <= 29188B)
+Showing top 8 nodes out of 9
+      flat  flat%   sum%        cum   cum%
+  2801664B 47.99% 47.99%   2801664B 47.99%  go.lostcrafters.com/ignore.(*instrArena).add (inline)
+  1926400B 33.00% 80.99%   1926400B 33.00%  go.lostcrafters.com/ignore.(*ruleArena).next (inline)
+   565248B  9.68% 90.67%    565248B  9.68%  go.lostcrafters.com/ignore.newInstrArena (inline)
+   289584B  4.96% 95.63%    289584B  4.96%  go.lostcrafters.com/ignore.(*Matcher).buildIndex
+   229488B  3.93% 99.57%   5812384B 99.57%  go.lostcrafters.com/ignore.Compile
+         0     0% 99.57%   4728064B 80.99%  go.lostcrafters.com/ignore.Compile-range1
+         0     0% 99.57%   5827544B 99.83%  go.lostcrafters.com/ignore/bench.TestRetainedHeapProfile
+         0     0% 99.57%   4728064B 80.99%  strings.splitSeq.func1 (inline)
+File: memory-before.exe
+Build ID: C:\Users\seanl\AppData\Local\Temp\opencode\memory-before.exe2026-10-09 19:06:40.8502686 +0100 BST
+Type: inuse_objects
+Time: 2026-10-09 19:06:52 BST
+Showing nodes accounting for 92, 94.85% of 97 total
+Showing top 8 nodes out of 76
+      flat  flat%   sum%        cum   cum%
+        40 41.24% 41.24%         40 41.24%  go.lostcrafters.com/ignore.(*ruleArena).next (inline)
+        26 26.80% 68.04%         26 26.80%  go.lostcrafters.com/ignore.(*Matcher).buildIndex
+        11 11.34% 79.38%         13 13.40%  runtime.mallocgc
+         5  5.15% 84.54%          5  5.15%  syscall.(*DLL).FindProc
+         3  3.09% 87.63%          3  3.09%  go.lostcrafters.com/ignore.(*instrArena).add (inline)
+         3  3.09% 90.72%         73 75.26%  go.lostcrafters.com/ignore.Compile
+         2  2.06% 92.78%          2  2.06%  runtime.mallocgcSmallScanNoHeaderSC1
+         2  2.06% 94.85%          2  2.06%  testing.(*common).Helper

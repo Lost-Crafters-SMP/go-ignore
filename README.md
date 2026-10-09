@@ -4,12 +4,39 @@
 
 Module: `go.lostcrafters.com/ignore`.
 
+The library provides byte-exact gitignore pattern matching, winning-rule metadata,
+strict-ancestor blocking, fixed-rank policy layers, lazy nested source discovery
+and a pruning walker. The runtime uses only the Go standard library.
+
+- [Behavioural specification and fixtures](docs/spec/README.md)
+- [Implemented architecture](docs/design.md)
+- [Library benchmarks](docs/benchmarks/README.md)
+- [Comparative benchmark methodology and results](bench/README.md)
+
+Licensed under [Apache-2.0](LICENSE.txt).
+
 ## Development
 
 ```
 mise install     # after approving: mise trust
+mise run fmt
 mise run check   # build, fmt:check, lint, test, tidy:check
 ```
+
+Additional checks use the pinned tools:
+
+```sh
+mise run test:race # requires a C compiler
+mise run vuln     # requires network access
+# With IGNORE_LIVE_GIT=1 (external Git >=2.52):
+mise exec -- go test . -run '^TestLiveGit' -count=1 -timeout=300s
+# With IGNORE_RESOURCE=1:
+mise exec -- go test . -run '^Test(KillableScaling|RetainedLiteralMemory|RetainedRuleSets|DefaultCapBoundaries)$' -count=1 -timeout=180s
+```
+
+CI runs tests, race checks, live-Git comparisons and resource checks on Linux,
+macOS and Windows. Oracle tests compare decisions and winning-rule metadata;
+custom ranks and reserved paths are library-specific contracts.
 
 ## Matching API
 
@@ -62,3 +89,9 @@ Policy's lifetime; the first error per directory is returned deterministically.
 `filepath.SkipDir`, aborts on the first I/O or discovery error, never follows
 symlinks and treats ignore source files as ordinary candidates. Traversal roots
 may be any subtree; the policy namespace stays root-relative.
+
+`Walk` prunes canonical directory endpoint exclusions, even when they are not
+strict-ancestor blocks. Under `bin/*` followed by `!bin/keep`, it may prune `bin/`
+and omit a child that pure matching includes. This differs from `git status`
+traversal; see the [documented comparison](bench/README.md#correctness-verification).
+`MatchPath` containment is lexical, not a security boundary against symlink escapes.

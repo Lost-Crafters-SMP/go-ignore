@@ -38,8 +38,7 @@ func layeredSpecs() []SourceSpec {
 }
 
 // layeredOracle is a scratch Git repository with a populated global excludes
-// file. It replicates the env hygiene of the fixture oracle without touching
-// the fixture harness.
+// file. It shares the fixture oracle's isolated environment.
 type layeredOracle struct {
 	*oracle
 	globalPath string
@@ -109,7 +108,7 @@ func (l *layeredOracle) label(source string) string {
 func checkPolicyRecord(t *testing.T, l *layeredOracle, d PolicyDecision, observed oracleRecord) {
 	t.Helper()
 	if d.Reserved {
-		t.Fatalf("reserved decision outside Git-only comparison: %+v", d)
+		t.Fatalf("reserved decision in Git-only comparison: %+v", d)
 	}
 	r := d.Rule
 	if d.Block != nil {

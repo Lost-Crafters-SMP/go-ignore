@@ -19,5 +19,4 @@
 // matcher stays usable without policy or walker overhead.
 //
 // The behavioural specification and regression fixtures are in docs/spec/.
-
 package ignore

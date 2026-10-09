@@ -223,23 +223,31 @@ func (a *ruleArena) next() *Rule {
 	return r
 }
 
-// instrArena places compiled programs in one growing backing store so rules
-// share a small number of allocations instead of one per program. Programs
-// are read-only after compilation; sub-slices carry no spare capacity. The
-// store is presized from the rule count, which is exact for literal-
-// dominated sources and bounds growth otherwise.
+// instrArena batches programs into stable backing arrays. A program always
+// fits in one batch; starting another batch never copies earlier instructions
+// or invalidates their slices. Small sources use their remaining rule count
+// as the batch size; large sources bound normal batches at ruleBatch. A
+// program larger than a normal batch gets exactly the space it needs.
 type instrArena struct {
-	store   []instruction
-	scratch []instruction
+	store    []instruction
+	scratch  []instruction
+	expected int
 }
 
 func newInstrArena(expected int) instrArena {
-	return instrArena{store: make([]instruction, 0, expected)}
+	return instrArena{expected: expected}
 }
 
 func (a *instrArena) add(prog []instruction) []instruction {
+	if len(prog) > cap(a.store)-len(a.store) {
+		size := max(len(prog), min(a.expected, ruleBatch))
+		a.store = make([]instruction, 0, size)
+	}
 	off := len(a.store)
 	a.store = append(a.store, prog...)
+	if a.expected > 0 {
+		a.expected--
+	}
 	return a.store[off:len(a.store):len(a.store)]
 }
 

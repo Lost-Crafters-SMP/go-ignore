@@ -1,0 +1,16 @@
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: mixed-10000: retained=3513080B objects=158 compile=3536696B allocations=162 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: literal-short: retained=323824B objects=22 compile=323744B allocations=20 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: literal-long: retained=1346416B objects=20 compile=1346464B allocations=20 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: class-heavy: retained=834424B objects=85 compile=838752B allocations=94 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS

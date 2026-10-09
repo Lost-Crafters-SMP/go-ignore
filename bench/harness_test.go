@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package bench hosts the comparative benchmark suite. Run
-// `go run ./cmd/benchsetup` once to materialize datasets, then use the
+// `mise exec -- go run ./cmd/benchsetup` once to materialize datasets, then use the
 // documented go test -bench commands (see bench/README.md).
 package bench
 
@@ -37,9 +37,6 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 	os.Setenv("GIT_CONFIG_NOSYSTEM", "1")
-	if v := os.Getenv("GIT_CONFIG_GLOBAL"); v != "" {
-		os.Setenv("GIT_CONFIG_GLOBAL", v)
-	}
 	empty := filepath.Join(cache, "empty-config")
 	os.Setenv("GIT_CONFIG_GLOBAL", empty)
 	os.Setenv("XDG_CONFIG_HOME", filepath.Join(cache, "xdg"))

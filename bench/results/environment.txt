@@ -9,3 +9,35 @@ github.com/git-pkgs/gitignore v1.3.0
 github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
 go.lostcrafters.com/ignore v0.0.0-00010101000000-000000000000 => ../
 golang.org/x/perf v0.0.0-20260929162123-406019bb8b68
+
+retained-storage follow-up — 2026-10-09
+baseline: 5688a809761d7d6a9131789fe0f1b35dd54b8bfb
+candidate: stable instruction batches in the working tree; evaluator unchanged
+same host, Go 1.27.1 and dependency pins as above
+timing: 6 x 1-second samples, alternating order, test.cpu=1, process affinity 0x40
+do not compare these absolute timings to the earlier unrestricted 16-thread run
+heap: rate-1 post-GC empty/live profiles, inuse_space/inuse_objects subtraction
+capacity: TestStorageLayout replays the same single-source programs
+retained totals: existing TestRetainedMemory medians of 5 GC-delta trials
+cache manifest SHA256: a5c6c33f15a2e89af5ed0d1c6df44e320e701f78b0a80c573025f6893008d1b3
+cache reused without rerunning benchsetup; moby tree and rule/query text shared
+storage-before/after.txt and storage.stats.txt: accepted stable-batch measurements
+storage-retained-before/after.txt: accepted retained-memory table
+storage-heap-before/after.txt: allocation-site byte and object profiles
+storage-layout-before/after.txt: exact units/copies/capacity, before allocator rounding
+storage-profile.txt: accepted candidate controlled length/class-heavy profiles
+storage-controlled.txt: earlier ablations, order baseline / rejected 24-byte candidate /
+  compaction-only / shrinking-only; NOT accepted before/after results
+storage-rejected-before/after.txt and storage-rejected.stats.txt: rejected 24-byte,
+  out-of-loop class-lookup candidate; direct class tests expose 14-25% regressions
+storage-index.txt: same-matcher literal index versus exhaustive scan
+
+full post-storage competitor rerun — 2026-10-09
+same final stable-batch working tree; no further production changes
+all drivers, all Tier1/Tier2/Tier3 benchmarks, six 1-second samples each
+test.cpu=1, process affinity 0x40; same cache manifest/hash and dependency pins
+comparison-storage-tier1/2/3.txt: full raw competitor/feature measurements
+comparison-storage-tier1/2/3.stats.txt: benchstat summaries; driver columns for tiers 1/2
+Tier1 .fullname rows keep hit/miss subsets separate (six samples each)
+comparison-storage-memory.txt: all three libraries, retained heap, five trials
+comparison-storage-correctness.txt: matching/pair/rank/reserved/walker gates rerun

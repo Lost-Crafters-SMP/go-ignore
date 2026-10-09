@@ -1,0 +1,6 @@
+=== RUN   TestStorageLayout
+    storage_layout_test.go:39: source=144131B rules=10033 rule-size=168B instructions=16446 instruction-size=56B classes=182 scope-groups=1 literal-keys=6056 wild=3977(cap=4096) rule-pointers=10033(cap=10033)
+    storage_layout_test.go:70: program storage: arrays=71 reserved-units=16468 copied-prefix-units=0 unused-units=22 unit-size=56B
+--- PASS: TestStorageLayout (0.00s)
+PASS
+ok  	go.lostcrafters.com/ignore	0.019s

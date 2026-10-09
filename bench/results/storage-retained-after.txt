@@ -1,0 +1,15 @@
+=== RUN   TestRetainedMemory
+    mem_test.go:56: ruleset mixed-10      go-ignore=3840B  git-pkgs=2760B  sabhiram=30040B
+    mem_test.go:56: ruleset mixed-100     go-ignore=34576B  git-pkgs=22792B  sabhiram=250104B
+    mem_test.go:56: ruleset mixed-1000    go-ignore=335728B  git-pkgs=225040B  sabhiram=2558816B
+    mem_test.go:56: ruleset mixed-10000   go-ignore=3497792B  git-pkgs=1930520B  sabhiram=26339480B
+    mem_test.go:56: ruleset lit-100       go-ignore=30392B  git-pkgs=21824B  sabhiram=204544B
+    mem_test.go:56: ruleset wild-100      go-ignore=34640B  git-pkgs=21424B  sabhiram=209104B
+    mem_test.go:56: ruleset anchored-100  go-ignore=36984B  git-pkgs=23952B  sabhiram=356224B
+    mem_test.go:56: ruleset dir-100       go-ignore=33008B  git-pkgs=22816B  sabhiram=208784B
+    mem_test.go:56: ruleset wild-complex  go-ignore=193392B  git-pkgs=103736B  sabhiram=1239088B
+    mem_test.go:56: ruleset moby-root     go-ignore=6296B  git-pkgs=4992B  sabhiram=46208B
+    mem_test.go:76: tree     nested-d8     go-ignore(policy,warm)=56856B  git-pkgs(eager)=30304B
+    mem_test.go:76: tree     moby          go-ignore(policy,warm)=439504B  git-pkgs(eager)=252512B
+--- PASS: TestRetainedMemory (4.15s)
+PASS

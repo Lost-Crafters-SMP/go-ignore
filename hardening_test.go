@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-// filesystem hardening: disappearing sources, special source types, deep
+// Filesystem hardening: disappearing sources, special source types, deep
 // and long paths, walker resilience under filesystem changes, containment
 // edges and concurrency across the whole read surface.
 

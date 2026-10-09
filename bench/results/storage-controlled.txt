@@ -1,0 +1,42 @@
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: literal-short: retained=323400B objects=22 compile=318368B allocations=17 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: literal-long: retained=1346136B objects=23 compile=1341088B allocations=17 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: class-heavy: retained=2583032B objects=26 compile=2587360B allocations=35 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: literal-short: retained=285568B objects=17 compile=285576B allocations=17 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: literal-long: retained=1308288B objects=17 compile=1308296B allocations=17 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: class-heavy: retained=739864B objects=20 compile=2400504B allocations=54 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: mixed-10000: retained=3376280B objects=77 compile=6777000B allocations=97 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestRetainedHeapProfile
+    profile_test.go:80: mixed-10000: retained=3417240B objects=79 compile=3453880B allocations=97 diagnostics=0
+--- PASS: TestRetainedHeapProfile (0.02s)
+PASS
+=== RUN   TestStorageLayout
+    storage_layout_test.go:38: source=144131B rules=10033 rule-size=168B instructions=16446 instruction-size=56B classes=182 scope-groups=1 literal-keys=6056 wild=3977(cap=4096) rule-pointers=10033(cap=10033)
+--- PASS: TestStorageLayout (0.00s)
+PASS
+ok  	go.lostcrafters.com/ignore	0.018s
+=== RUN   TestStorageLayout
+    storage_layout_test.go:38: source=144131B rules=10033 rule-size=168B instructions=16446 instruction-size=24B classes=182 scope-groups=1 literal-keys=6056 wild=3977(cap=4096) rule-pointers=10033(cap=10033)
+--- PASS: TestStorageLayout (0.00s)
+PASS
+ok  	go.lostcrafters.com/ignore	0.017s

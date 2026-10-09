@@ -1,0 +1,63 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+                                  │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-before-split-comparison.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-split-split-comparison.txt │
+                                  │                                    sec/op                                     │                        sec/op                          vs base               │
+ClassStorage/classes=8/hit=true                                                                       121.4n ± 2%                                            138.8n ±  3%  +14.34% (p=0.002 n=6)
+ClassStorage/classes=8/hit=false                                                                      124.6n ± 4%                                            141.5n ± 16%  +13.65% (p=0.002 n=6)
+ClassStorage/classes=64/hit=true                                                                      3.858µ ± 3%                                            4.803µ ± 13%  +24.48% (p=0.002 n=6)
+ClassStorage/classes=64/hit=false                                                                     3.988µ ± 2%                                            4.877µ ±  8%  +22.29% (p=0.002 n=6)
+geomean                                                                                               694.4n                                                 823.6n        +18.59%
+
+                                  │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-before-split-comparison.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-split-split-comparison.txt │
+                                  │                                     B/op                                      │                         B/op                          vs base                │
+ClassStorage/classes=8/hit=true                                                                      0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=8/hit=false                                                                     0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=64/hit=true                                                                     0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=64/hit=false                                                                    0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+geomean                                                                                                         ²                                                         +0.00%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+                                  │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-before-split-comparison.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-split-split-comparison.txt │
+                                  │                                   allocs/op                                   │                      allocs/op                        vs base                │
+ClassStorage/classes=8/hit=true                                                                      0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=8/hit=false                                                                     0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=64/hit=true                                                                     0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=64/hit=false                                                                    0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+geomean                                                                                                         ²                                                         +0.00%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+pkg: go.lostcrafters.com/ignore/bench
+                                               │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-before-split-comparison.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-split-split-comparison.txt │
+                                               │                                    sec/op                                     │                         sec/op                          vs base              │
+Tier1Match/rules=mixed-10/driver=go-ignore                                                                        154.0n ± 12%                                             160.6n ±  4%       ~ (p=0.093 n=6)
+Tier1Match/rules=mixed-100/driver=go-ignore                                                                       629.4n ±  4%                                             602.1n ±  4%  -4.33% (p=0.026 n=6)
+Tier1Match/rules=wild-100/driver=go-ignore                                                                        750.2n ±  8%                                             739.5n ± 15%       ~ (p=0.240 n=6)
+Tier1Match/rules=wild-complex/driver=go-ignore                                                                    5.974µ ±  3%                                             6.056µ ±  6%       ~ (p=0.699 n=6)
+Tier1Match/rules=moby-root/driver=go-ignore                                                                       455.4n ±  5%                                             460.8n ±  9%       ~ (p=0.240 n=6)
+geomean                                                                                                           723.2n                                                   724.4n        +0.16%
+
+                                               │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-before-split-comparison.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-split-split-comparison.txt │
+                                               │                                     B/op                                      │                         B/op                          vs base                │
+Tier1Match/rules=mixed-10/driver=go-ignore                                                                        0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-100/driver=go-ignore                                                                       3.000 ± 0%                                               3.000 ± 0%       ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-100/driver=go-ignore                                                                        15.00 ± 0%                                               15.00 ± 0%       ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-complex/driver=go-ignore                                                                    9.000 ± 0%                                               9.000 ± 0%       ~ (p=1.000 n=6) ¹
+Tier1Match/rules=moby-root/driver=go-ignore                                                                       0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+geomean                                                                                                                      ²                                                         +0.00%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+                                               │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-before-split-comparison.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/memory-split-split-comparison.txt │
+                                               │                                   allocs/op                                   │                      allocs/op                        vs base                │
+Tier1Match/rules=mixed-10/driver=go-ignore                                                                        0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-100/driver=go-ignore                                                                       0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-100/driver=go-ignore                                                                        0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-complex/driver=go-ignore                                                                    0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+Tier1Match/rules=moby-root/driver=go-ignore                                                                       0.000 ± 0%                                               0.000 ± 0%       ~ (p=1.000 n=6) ¹
+geomean                                                                                                                      ²                                                         +0.00%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean

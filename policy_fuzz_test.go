@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// fuzz expansion: policy composition over adversarial query paths, and
+// Fuzz policy composition over adversarial query paths, and
 // compilation of arbitrary source bytes into multi-source matchers. Both
 // targets assert invariants (no panics, determinism, validation, model
 // equivalence) rather than fixed outputs.

@@ -1,12 +1,13 @@
 # Repository context
 
-- This is a standalone Git-compatible ignore matching library module, `go.lostcrafters.com/ignore`, not an application. The root package is `ignore`.
+- This is a standalone Git-compatible ignore matching library module, `go.lostcrafters.com/ignore`, not an application. The root package is `ignore`. `docs/spec/` contains the behavioural specification, API contracts and regression fixtures; `docs/design.md` describes the implemented architecture. Comparative benchmark methodology and results are in `bench/README.md`.
 - Keep library code at the module root; introduce subpackages only as needed (see `README.md`). `go.work` is ignored and is not part of the shared setup.
-- V1 scope: byte-exact gitignore semantics, winning-rule provenance and blocking ancestors, fixed ranks independent of scope depth, nested policies, and later pruning traversal. Match's canonical slash-form directory exclusion alone is not a traversal block; bare strict-ancestor decisions establish blocking. The Git executable is a black-box behavioural reference, never a source-code template. Custom-rank semantics are library-specific, not Git-oracle claims.
+- Preserve byte-exact gitignore semantics, winning-rule metadata and blocking ancestors, fixed ranks independent of scope depth, nested policies and pruning traversal. Match's canonical slash-form directory exclusion alone is not a strict-ancestor block; Walk nevertheless prunes ignored directory endpoints as documented. The Git executable is a black-box behavioural reference, never a source-code template. Custom-rank semantics are library-specific, not Git-oracle claims.
 
-## Licence
+## Licence and implementation
 
-- Retain Apache-2.0 and applicable notices. Write production code independently.
+- Retain Apache-2.0 and applicable notices. Write production code independently; do not copy or port another matcher's implementation. Use behavioural cases and public contracts, not upstream matcher source.
+- Keep specification checksums in `docs/spec/manifest.json` consistent when editing its documented inputs.
 
 ## Tooling and verification
 

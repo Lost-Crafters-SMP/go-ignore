@@ -1,0 +1,65 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+                                                              │ C:/Users/seanl/AppData/Local/Temp/opencode/comparison-storage-tier3.txt │
+                                                              │                                 sec/op                                  │
+Tier3MatcherVsPolicy/tree=nested-d8/engine=cumulative-matcher                                                              1.309µ ±  5%
+Tier3MatcherVsPolicy/tree=nested-d8/engine=composed-policy                                                                 830.2n ±  4%
+Tier3MatcherVsPolicy/tree=moby/engine=cumulative-matcher                                                                   7.635µ ±  3%
+Tier3MatcherVsPolicy/tree=moby/engine=composed-policy                                                                      871.2n ± 13%
+Tier3SingleVsComposed/tree=pair-single                                                                                     387.2n ±  2%
+Tier3SingleVsComposed/tree=pair-nested                                                                                     748.0n ±  2%
+Tier3Ranks/ranks=standard                                                                                                  824.2n ±  6%
+Tier3Ranks/ranks=custom                                                                                                    829.7n ±  2%
+Tier3Reserved/reserved-on                                                                                                  861.9n ±  2%
+Tier3Reserved/reserved-off                                                                                                 815.0n ±  3%
+Tier3Depth/tree=nested-d2                                                                                                  267.5n ± 17%
+Tier3Depth/tree=nested-d8                                                                                                  833.4n ±  2%
+Tier3Depth/tree=nested-d32                                                                                                 5.780µ ±  2%
+Tier3DecisionWorkload/workload=ancestor-blocked                                                                            884.4n ±  2%
+Tier3DecisionWorkload/workload=endpoint-decided                                                                            962.8n ±  1%
+Tier3DecisionWorkload/workload=clean-miss                                                                                  787.8n ±  2%
+geomean                                                                                                                    991.3n
+
+                                                              │ C:/Users/seanl/AppData/Local/Temp/opencode/comparison-storage-tier3.txt │
+                                                              │                                  B/op                                   │
+Tier3MatcherVsPolicy/tree=nested-d8/engine=cumulative-matcher                                                              3.000 ± 0%
+Tier3MatcherVsPolicy/tree=nested-d8/engine=composed-policy                                                                 3.000 ± 0%
+Tier3MatcherVsPolicy/tree=moby/engine=cumulative-matcher                                                                   112.0 ± 0%
+Tier3MatcherVsPolicy/tree=moby/engine=composed-policy                                                                      0.000 ± 0%
+Tier3SingleVsComposed/tree=pair-single                                                                                     2.000 ± 0%
+Tier3SingleVsComposed/tree=pair-nested                                                                                     2.000 ± 0%
+Tier3Ranks/ranks=standard                                                                                                  3.000 ± 0%
+Tier3Ranks/ranks=custom                                                                                                    3.000 ± 0%
+Tier3Reserved/reserved-on                                                                                                  0.000 ± 0%
+Tier3Reserved/reserved-off                                                                                                 0.000 ± 0%
+Tier3Depth/tree=nested-d2                                                                                                  3.000 ± 0%
+Tier3Depth/tree=nested-d8                                                                                                  3.000 ± 0%
+Tier3Depth/tree=nested-d32                                                                                                 4.000 ± 0%
+Tier3DecisionWorkload/workload=ancestor-blocked                                                                            24.00 ± 0%
+Tier3DecisionWorkload/workload=endpoint-decided                                                                            0.000 ± 0%
+Tier3DecisionWorkload/workload=clean-miss                                                                                  0.000 ± 0%
+geomean                                                                                                                               ¹
+¹ summaries must be >0 to compute geomean
+
+                                                              │ C:/Users/seanl/AppData/Local/Temp/opencode/comparison-storage-tier3.txt │
+                                                              │                                allocs/op                                │
+Tier3MatcherVsPolicy/tree=nested-d8/engine=cumulative-matcher                                                              0.000 ± 0%
+Tier3MatcherVsPolicy/tree=nested-d8/engine=composed-policy                                                                 0.000 ± 0%
+Tier3MatcherVsPolicy/tree=moby/engine=cumulative-matcher                                                                   1.000 ± 0%
+Tier3MatcherVsPolicy/tree=moby/engine=composed-policy                                                                      0.000 ± 0%
+Tier3SingleVsComposed/tree=pair-single                                                                                     0.000 ± 0%
+Tier3SingleVsComposed/tree=pair-nested                                                                                     0.000 ± 0%
+Tier3Ranks/ranks=standard                                                                                                  0.000 ± 0%
+Tier3Ranks/ranks=custom                                                                                                    0.000 ± 0%
+Tier3Reserved/reserved-on                                                                                                  0.000 ± 0%
+Tier3Reserved/reserved-off                                                                                                 0.000 ± 0%
+Tier3Depth/tree=nested-d2                                                                                                  0.000 ± 0%
+Tier3Depth/tree=nested-d8                                                                                                  0.000 ± 0%
+Tier3Depth/tree=nested-d32                                                                                                 0.000 ± 0%
+Tier3DecisionWorkload/workload=ancestor-blocked                                                                            1.000 ± 0%
+Tier3DecisionWorkload/workload=endpoint-decided                                                                            0.000 ± 0%
+Tier3DecisionWorkload/workload=clean-miss                                                                                  0.000 ± 0%
+geomean                                                                                                                               ¹
+¹ summaries must be >0 to compute geomean

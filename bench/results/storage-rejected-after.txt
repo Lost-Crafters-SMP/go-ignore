@@ -1,0 +1,114 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkTier1Match/rules=mixed-10/driver=go-ignore         	 7639662	       158.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=mixed-100/driver=go-ignore        	 1966896	       609.7 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-100/driver=go-ignore         	 1521759	       851.6 ns/op	      15 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-complex/driver=go-ignore     	  199892	      6115 ns/op	       9 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=moby-root/driver=go-ignore        	 2632477	       456.4 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkClassStorage/classes=8/hit=true         	 8750730	       139.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=8/hit=false        	 8458101	       143.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=true        	  243675	      5425 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=false       	  246147	      4853 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkTier1Match/rules=mixed-10/driver=go-ignore         	 7496630	       161.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=mixed-100/driver=go-ignore        	 2014969	       596.3 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-100/driver=go-ignore         	 1641840	       743.1 ns/op	      15 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-complex/driver=go-ignore     	  215809	      6017 ns/op	       9 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=moby-root/driver=go-ignore        	 2577945	       463.5 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkClassStorage/classes=8/hit=true         	 8207607	       137.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=8/hit=false        	 8553277	       139.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=true        	  247867	      4775 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=false       	  251852	      4823 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkTier1Match/rules=mixed-10/driver=go-ignore         	 7653373	       156.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=mixed-100/driver=go-ignore        	 1985631	       604.8 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-100/driver=go-ignore         	 1653805	       741.8 ns/op	      15 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-complex/driver=go-ignore     	  172404	      6406 ns/op	       9 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=moby-root/driver=go-ignore        	 2433212	       478.1 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkClassStorage/classes=8/hit=true         	 8748873	       143.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=8/hit=false        	 7051857	       145.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=true        	  251791	      4826 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=false       	  256909	      5097 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkTier1Match/rules=mixed-10/driver=go-ignore         	 7526020	       166.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=mixed-100/driver=go-ignore        	 1893686	       627.2 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-100/driver=go-ignore         	 1647296	       732.5 ns/op	      15 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-complex/driver=go-ignore     	  192043	      5849 ns/op	       9 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=moby-root/driver=go-ignore        	 2245885	       502.2 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkClassStorage/classes=8/hit=true         	 8730332	       137.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=8/hit=false        	 8678050	       139.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=true        	  256086	      4910 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=false       	  253358	      5255 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkTier1Match/rules=mixed-10/driver=go-ignore         	 7406095	       163.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=mixed-100/driver=go-ignore        	 2000530	       599.4 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-100/driver=go-ignore         	 1660790	       728.4 ns/op	      15 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-complex/driver=go-ignore     	  166740	      6094 ns/op	       9 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=moby-root/driver=go-ignore        	 2594180	       458.2 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkClassStorage/classes=8/hit=true         	 8356905	       139.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=8/hit=false        	 8634938	       164.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=true        	  256706	      4766 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=false       	  250531	      4898 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkTier1Match/rules=mixed-10/driver=go-ignore         	 7537545	       159.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=mixed-100/driver=go-ignore        	 2016948	       593.2 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-100/driver=go-ignore         	 1649911	       737.2 ns/op	      15 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=wild-complex/driver=go-ignore     	  216577	      5711 ns/op	       9 B/op	       0 allocs/op
+BenchmarkTier1Match/rules=moby-root/driver=go-ignore        	 2638230	       456.5 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkClassStorage/classes=8/hit=true         	 8756874	       137.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=8/hit=false        	 8648984	       139.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=true        	  255796	      4779 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClassStorage/classes=64/hit=false       	  258217	      4856 ns/op	       0 B/op	       0 allocs/op
+PASS

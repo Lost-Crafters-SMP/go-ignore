@@ -1,0 +1,31 @@
+File: storage-batched.exe
+Build ID: C:\Users\seanl\AppData\Local\Temp\opencode\storage-batched.exe2026-10-09 20:29:42.7052377 +0100 BST
+Type: inuse_space
+Time: 2026-10-09 20:29:48 BST
+Showing nodes accounting for 3523248B, 99.57% of 3538448B total
+Dropped 58 nodes (cum <= 17692B)
+Showing top 8 nodes out of 17
+      flat  flat%   sum%        cum   cum%
+  1926400B 54.44% 54.44%   1926400B 54.44%  go.lostcrafters.com/ignore.(*ruleArena).next (inline)
+  1052320B 29.74% 84.18%   1052320B 29.74%  go.lostcrafters.com/ignore.(*instrArena).add (inline)
+   289584B  8.18% 92.37%    289584B  8.18%  go.lostcrafters.com/ignore.(*Matcher).buildIndex
+   229488B  6.49% 98.85%   3497792B 98.85%  go.lostcrafters.com/ignore.Compile
+    25456B  0.72% 99.57%     25496B  0.72%  runtime.mallocgc
+         0     0% 99.57%   2978720B 84.18%  go.lostcrafters.com/ignore.Compile-range1
+         0     0% 99.57%   3512952B 99.28%  go.lostcrafters.com/ignore/bench.TestRetainedHeapProfile
+         0     0% 99.57%     25480B  0.72%  runtime.allocm
+File: storage-batched.exe
+Build ID: C:\Users\seanl\AppData\Local\Temp\opencode\storage-batched.exe2026-10-09 20:29:42.7052377 +0100 BST
+Type: inuse_objects
+Time: 2026-10-09 20:29:48 BST
+Showing nodes accounting for 178, 97.80% of 182 total
+Showing top 8 nodes out of 75
+      flat  flat%   sum%        cum   cum%
+        71 39.01% 39.01%         71 39.01%  go.lostcrafters.com/ignore.(*instrArena).add (inline)
+        40 21.98% 60.99%         40 21.98%  go.lostcrafters.com/ignore.(*ruleArena).next (inline)
+        26 14.29% 75.27%         26 14.29%  go.lostcrafters.com/ignore.(*Matcher).buildIndex
+        26 14.29% 89.56%         31 17.03%  runtime.mallocgc
+         5  2.75% 92.31%          5  2.75%  runtime.mallocgcSmallScanNoHeaderSC1
+         5  2.75% 95.05%          5  2.75%  syscall.(*DLL).FindProc
+         3  1.65% 96.70%        140 76.92%  go.lostcrafters.com/ignore.Compile
+         2  1.10% 97.80%          2  1.10%  testing.(*common).Helper

@@ -1,0 +1,144 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+                                  │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-before.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-batched.txt │
+                                  │                               sec/op                                │                     sec/op                      vs base              │
+ClassStorage/classes=8/hit=true                                                            122.3n ±  8%                                     126.6n ±  3%       ~ (p=0.065 n=6)
+ClassStorage/classes=8/hit=false                                                           121.8n ±  3%                                     124.5n ±  3%  +2.22% (p=0.039 n=6)
+ClassStorage/classes=64/hit=true                                                           3.983µ ±  7%                                     3.913µ ± 12%       ~ (p=0.699 n=6)
+ClassStorage/classes=64/hit=false                                                          4.128µ ± 20%                                     4.072µ ± 54%       ~ (p=0.699 n=6)
+geomean                                                                                    703.5n                                           707.9n        +0.63%
+
+                                  │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-before.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-batched.txt │
+                                  │                                B/op                                 │                     B/op                      vs base                │
+ClassStorage/classes=8/hit=true                                                            0.000 ± 0%                                       0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=8/hit=false                                                           0.000 ± 0%                                       0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=64/hit=true                                                           0.000 ± 0%                                       0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=64/hit=false                                                          0.000 ± 0%                                       0.000 ± 0%       ~ (p=1.000 n=6) ¹
+geomean                                                                                               ²                                                 +0.00%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+                                  │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-before.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-batched.txt │
+                                  │                              allocs/op                              │                  allocs/op                    vs base                │
+ClassStorage/classes=8/hit=true                                                            0.000 ± 0%                                       0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=8/hit=false                                                           0.000 ± 0%                                       0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=64/hit=true                                                           0.000 ± 0%                                       0.000 ± 0%       ~ (p=1.000 n=6) ¹
+ClassStorage/classes=64/hit=false                                                          0.000 ± 0%                                       0.000 ± 0%       ~ (p=1.000 n=6) ¹
+geomean                                                                                               ²                                                 +0.00%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+pkg: go.lostcrafters.com/ignore/bench
+                                                 │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-before.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-batched.txt │
+                                                 │                               sec/op                                │                    sec/op                      vs base               │
+Tier1Compile/rules=mixed-10/driver=go-ignore                                                              2.195µ ± 92%                                    1.960µ ± 16%  -10.71% (p=0.026 n=6)
+Tier1Compile/rules=mixed-100/driver=go-ignore                                                             16.01µ ± 31%                                    14.05µ ±  9%  -12.25% (p=0.004 n=6)
+Tier1Compile/rules=mixed-1000/driver=go-ignore                                                            251.8µ ± 16%                                    194.4µ ± 21%  -22.79% (p=0.026 n=6)
+Tier1Compile/rules=mixed-10000/driver=go-ignore                                                           3.068m ± 11%                                    2.479m ± 32%  -19.21% (p=0.026 n=6)
+Tier1Compile/rules=lit-100/driver=go-ignore                                                               15.47µ ± 37%                                    15.14µ ±  8%        ~ (p=0.937 n=6)
+Tier1Compile/rules=wild-100/driver=go-ignore                                                              16.29µ ±  7%                                    13.18µ ± 69%        ~ (p=0.065 n=6)
+Tier1Compile/rules=anchored-100/driver=go-ignore                                                          18.16µ ±  7%                                    15.81µ ± 88%        ~ (p=0.065 n=6)
+Tier1Compile/rules=dir-100/driver=go-ignore                                                               17.80µ ± 14%                                    14.25µ ± 35%  -19.97% (p=0.041 n=6)
+Tier1Compile/rules=wild-complex/driver=go-ignore                                                         121.80µ ± 25%                                    90.63µ ± 11%  -25.59% (p=0.002 n=6)
+Tier1Compile/rules=moby-root/driver=go-ignore                                                             3.816µ ± 16%                                    3.676µ ± 11%        ~ (p=0.485 n=6)
+Tier1Match/rules=mixed-10/driver=go-ignore                                                                161.1n ± 12%                                    163.4n ± 19%        ~ (p=0.589 n=6)
+Tier1Match/rules=mixed-100/driver=go-ignore                                                               640.3n ± 12%                                    654.3n ± 17%        ~ (p=0.485 n=6)
+Tier1Match/rules=mixed-1000/driver=go-ignore                                                              5.828µ ± 30%                                    5.845µ ± 12%        ~ (p=0.734 n=6)
+Tier1Match/rules=mixed-10000/driver=go-ignore                                                             122.3µ ±  3%                                    122.8µ ±  3%        ~ (p=0.818 n=6)
+Tier1Match/rules=lit-100/driver=go-ignore                                                                 130.0n ± 21%                                    130.2n ±  6%        ~ (p=0.699 n=6)
+Tier1Match/rules=wild-100/driver=go-ignore                                                                760.9n ± 16%                                    807.8n ± 11%        ~ (p=0.310 n=6)
+Tier1Match/rules=anchored-100/driver=go-ignore                                                            548.4n ± 24%                                    558.0n ±  6%        ~ (p=0.589 n=6)
+Tier1Match/rules=dir-100/driver=go-ignore                                                                 468.1n ± 15%                                    457.0n ± 20%        ~ (p=0.937 n=6)
+Tier1Match/rules=wild-complex/driver=go-ignore                                                            5.897µ ± 11%                                    6.265µ ± 20%        ~ (p=0.310 n=6)
+Tier1Match/rules=moby-root/driver=go-ignore                                                               449.3n ±  6%                                    467.7n ± 28%        ~ (p=0.180 n=6)
+Tier2Cold/tree=nested-d8/driver=go-ignore                                                                 688.9µ ± 14%                                    700.1µ ± 16%        ~ (p=0.589 n=6)
+Tier2Cold/tree=moby/driver=go-ignore                                                                      351.2µ ± 16%                                    349.3µ ± 14%        ~ (p=0.699 n=6)
+Tier2ColdSweep/tree=nested-d8/driver=go-ignore                                                            2.221m ±  6%                                    2.221m ± 21%        ~ (p=0.394 n=6)
+Tier2ColdSweep/tree=moby/driver=go-ignore                                                                 22.00m ± 42%                                    21.08m ± 24%        ~ (p=0.699 n=6)
+Tier2Warm/tree=nested-d8/driver=go-ignore                                                                 900.1n ± 14%                                    877.1n ± 37%        ~ (p=0.937 n=6)
+Tier2Warm/tree=moby/driver=go-ignore                                                                      882.8n ± 20%                                    889.4n ± 14%        ~ (p=0.937 n=6)
+Tier2Walk/tree=nested-d8/driver=go-ignore                                                                 1.712m ± 14%                                    1.710m ± 17%        ~ (p=0.937 n=6)
+Tier2Walk/tree=moby/driver=go-ignore                                                                      386.1m ± 18%                                    379.0m ± 10%        ~ (p=0.699 n=6)
+geomean                                                                                                   21.84µ                                          20.69µ         -5.27%
+
+                                                 │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-before.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-batched.txt │
+                                                 │                                B/op                                 │                    B/op                      vs base                 │
+Tier1Compile/rules=mixed-10/driver=go-ignore                                                            5.164Ki ± 0%                                    4.133Ki ± 0%  -19.97% (p=0.002 n=6)
+Tier1Compile/rules=mixed-100/driver=go-ignore                                                           41.98Ki ± 0%                                    34.40Ki ± 0%  -18.05% (p=0.002 n=6)
+Tier1Compile/rules=mixed-1000/driver=go-ignore                                                          477.6Ki ± 0%                                    330.2Ki ± 0%  -30.85% (p=0.002 n=6)
+Tier1Compile/rules=mixed-10000/driver=go-ignore                                                         5.579Mi ± 0%                                    3.371Mi ± 0%  -39.57% (p=0.002 n=6)
+Tier1Compile/rules=lit-100/driver=go-ignore                                                             29.74Ki ± 0%                                    29.74Ki ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Compile/rules=wild-100/driver=go-ignore                                                            63.60Ki ± 0%                                    34.71Ki ± 0%  -45.42% (p=0.002 n=6)
+Tier1Compile/rules=anchored-100/driver=go-ignore                                                        42.94Ki ± 0%                                    36.75Ki ± 0%  -14.41% (p=0.002 n=6)
+Tier1Compile/rules=dir-100/driver=go-ignore                                                             42.76Ki ± 0%                                    32.65Ki ± 0%  -23.64% (p=0.002 n=6)
+Tier1Compile/rules=wild-complex/driver=go-ignore                                                        259.2Ki ± 0%                                    191.2Ki ± 0%  -26.23% (p=0.002 n=6)
+Tier1Compile/rules=moby-root/driver=go-ignore                                                           7.938Ki ± 0%                                    6.562Ki ± 0%  -17.32% (p=0.002 n=6)
+Tier1Match/rules=mixed-10/driver=go-ignore                                                                0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-100/driver=go-ignore                                                               3.000 ± 0%                                      3.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-1000/driver=go-ignore                                                              3.000 ± 0%                                      3.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-10000/driver=go-ignore                                                             4.000 ± 0%                                      4.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=lit-100/driver=go-ignore                                                                 0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-100/driver=go-ignore                                                                15.00 ± 0%                                      15.00 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=anchored-100/driver=go-ignore                                                            0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=dir-100/driver=go-ignore                                                                 13.00 ± 0%                                      13.00 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-complex/driver=go-ignore                                                            9.000 ± 0%                                      9.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=moby-root/driver=go-ignore                                                               0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier2Cold/tree=nested-d8/driver=go-ignore                                                               48.23Ki ± 0%                                    40.92Ki ± 0%  -15.16% (p=0.002 n=6)
+Tier2Cold/tree=moby/driver=go-ignore                                                                    31.48Ki ± 0%                                    27.88Ki ± 0%  -11.42% (p=0.002 n=6)
+Tier2ColdSweep/tree=nested-d8/driver=go-ignore                                                          122.2Ki ± 0%                                    108.4Ki ± 0%  -11.30% (p=0.002 n=6)
+Tier2ColdSweep/tree=moby/driver=go-ignore                                                               1.061Mi ± 0%                                    1.019Mi ± 0%   -3.95% (p=0.002 n=6)
+Tier2Warm/tree=nested-d8/driver=go-ignore                                                                 3.000 ± 0%                                      3.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier2Warm/tree=moby/driver=go-ignore                                                                      0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier2Walk/tree=nested-d8/driver=go-ignore                                                               127.1Ki ± 0%                                    127.1Ki ± 0%        ~ (p=0.619 n=6)
+Tier2Walk/tree=moby/driver=go-ignore                                                                    15.59Mi ± 0%                                    15.58Mi ± 0%   -0.08% (p=0.002 n=6)
+geomean                                                                                                              ²                                                -11.01%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+                                                 │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-before.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-batched.txt │
+                                                 │                              allocs/op                              │                  allocs/op                   vs base                 │
+Tier1Compile/rules=mixed-10/driver=go-ignore                                                              15.00 ± 0%                                      15.00 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Compile/rules=mixed-100/driver=go-ignore                                                             24.00 ± 0%                                      29.00 ± 0%  +20.83% (p=0.002 n=6)
+Tier1Compile/rules=mixed-1000/driver=go-ignore                                                            31.00 ± 0%                                      40.00 ± 0%  +29.03% (p=0.002 n=6)
+Tier1Compile/rules=mixed-10000/driver=go-ignore                                                           89.00 ± 0%                                     156.00 ± 0%  +75.28% (p=0.002 n=6)
+Tier1Compile/rules=lit-100/driver=go-ignore                                                               12.00 ± 0%                                      12.00 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Compile/rules=wild-100/driver=go-ignore                                                              21.00 ± 0%                                      27.00 ± 0%  +28.57% (p=0.002 n=6)
+Tier1Compile/rules=anchored-100/driver=go-ignore                                                          21.00 ± 0%                                      26.00 ± 0%  +23.81% (p=0.002 n=6)
+Tier1Compile/rules=dir-100/driver=go-ignore                                                               23.00 ± 0%                                      26.00 ± 0%  +13.04% (p=0.002 n=6)
+Tier1Compile/rules=wild-complex/driver=go-ignore                                                          24.00 ± 0%                                      35.00 ± 0%  +45.83% (p=0.002 n=6)
+Tier1Compile/rules=moby-root/driver=go-ignore                                                             19.00 ± 0%                                      20.00 ± 0%   +5.26% (p=0.002 n=6)
+Tier1Match/rules=mixed-10/driver=go-ignore                                                                0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-100/driver=go-ignore                                                               0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-1000/driver=go-ignore                                                              0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-10000/driver=go-ignore                                                             0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=lit-100/driver=go-ignore                                                                 0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-100/driver=go-ignore                                                                0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=anchored-100/driver=go-ignore                                                            0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=dir-100/driver=go-ignore                                                                 0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-complex/driver=go-ignore                                                            0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier1Match/rules=moby-root/driver=go-ignore                                                               0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier2Cold/tree=nested-d8/driver=go-ignore                                                                 250.0 ± 0%                                      250.0 ± 0%        ~ (p=1.000 n=6) ¹
+Tier2Cold/tree=moby/driver=go-ignore                                                                      150.0 ± 0%                                      151.0 ± 0%   +0.67% (p=0.002 n=6)
+Tier2ColdSweep/tree=nested-d8/driver=go-ignore                                                            756.0 ± 0%                                      756.0 ± 0%        ~ (p=1.000 n=6) ¹
+Tier2ColdSweep/tree=moby/driver=go-ignore                                                                8.033k ± 0%                                     8.074k ± 0%   +0.51% (p=0.002 n=6)
+Tier2Warm/tree=nested-d8/driver=go-ignore                                                                 0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier2Warm/tree=moby/driver=go-ignore                                                                      0.000 ± 0%                                      0.000 ± 0%        ~ (p=1.000 n=6) ¹
+Tier2Walk/tree=nested-d8/driver=go-ignore                                                                1.416k ± 0%                                     1.416k ± 0%        ~ (p=1.000 n=6) ¹
+Tier2Walk/tree=moby/driver=go-ignore                                                                     170.0k ± 0%                                     170.0k ± 0%   +0.01% (p=0.002 n=6)
+geomean                                                                                                              ²                                                 +7.53%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+                                               │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-before.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-batched.txt │
+                                               │                              queries/s                              │                   queries/s                     vs base              │
+Tier2ColdSweep/tree=nested-d8/driver=go-ignore                                                          94.14k ±  7%                                     94.21k ± 17%       ~ (p=0.394 n=6)
+Tier2ColdSweep/tree=moby/driver=go-ignore                                                               72.75k ± 30%                                     75.90k ± 19%       ~ (p=0.699 n=6)
+geomean                                                                                                 82.76k                                           84.56k        +2.18%
+
+                                          │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-before.txt │ C:/Users/seanl/AppData/Local/Temp/opencode/storage-final-batched.txt │
+                                          │                              entries/s                              │                   entries/s                     vs base              │
+Tier2Walk/tree=nested-d8/driver=go-ignore                                                          139.2k ± 13%                                     139.2k ± 15%       ~ (p=0.937 n=6)
+Tier2Walk/tree=moby/driver=go-ignore                                                               62.12k ± 15%                                     63.29k ±  9%       ~ (p=0.699 n=6)
+geomean                                                                                            93.00k                                           93.85k        +0.91%

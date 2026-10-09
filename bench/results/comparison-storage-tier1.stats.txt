@@ -1,0 +1,86 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+                                     │  go-ignore   │               git-pkgs                │                 sabhiram                 │
+                                     │    sec/op    │    sec/op      vs base                │     sec/op      vs base                  │
+Tier1Compile/rules=mixed-10            2.102µ ± 29%    2.908µ ± 20%   +38.32% (p=0.004 n=6)   246.637µ ±  7%  +11633.44% (p=0.002 n=6)
+Tier1Compile/rules=mixed-100           15.93µ ±  3%    20.03µ ±  9%   +25.77% (p=0.002 n=6)   2078.07µ ±  8%  +12948.27% (p=0.002 n=6)
+Tier1Compile/rules=mixed-1000          228.2µ ±  3%    229.2µ ±  9%         ~ (p=0.699 n=6)   21017.1µ ±  3%   +9110.71% (p=0.002 n=6)
+Tier1Compile/rules=mixed-10000         2.490m ±  8%    3.040m ± 28%   +22.10% (p=0.002 n=6)   250.086m ±  2%   +9944.23% (p=0.002 n=6)
+Tier1Compile/rules=lit-100             16.53µ ± 12%    18.89µ ±  5%   +14.27% (p=0.002 n=6)   1913.13µ ± 19%  +11471.56% (p=0.002 n=6)
+Tier1Compile/rules=wild-100            15.28µ ±  8%    17.55µ ±  2%   +14.89% (p=0.002 n=6)   2012.59µ ±  2%  +13071.81% (p=0.002 n=6)
+Tier1Compile/rules=anchored-100        22.24µ ± 21%    25.80µ ±  3%         ~ (p=0.121 n=6)   2128.92µ ±  2%   +9473.76% (p=0.002 n=6)
+Tier1Compile/rules=dir-100             15.00µ ±  2%    24.48µ ±  9%   +63.19% (p=0.002 n=6)   2045.39µ ±  4%  +13534.13% (p=0.002 n=6)
+Tier1Compile/rules=wild-complex        123.1µ ± 34%    125.5µ ± 12%         ~ (p=0.937 n=6)   10766.2µ ±  2%   +8644.85% (p=0.002 n=6)
+Tier1Compile/rules=moby-root           4.393µ ±  3%    4.072µ ± 19%         ~ (p=0.065 n=6)   360.920µ ±  3%   +8116.72% (p=0.002 n=6)
+Tier1Match/rules=mixed-10              160.4n ±  3%    140.5n ±  5%   -12.44% (p=0.002 n=6)    4241.5n ±  9%   +2544.33% (p=0.002 n=6)
+Tier1Match/rules=mixed-100             671.5n ± 28%    978.6n ±  3%   +45.74% (p=0.002 n=6)   40323.0n ±  1%   +5904.91% (p=0.002 n=6)
+Tier1Match/rules=mixed-1000            5.859µ ±  9%    9.006µ ±  2%   +53.70% (p=0.002 n=6)   428.800µ ±  3%   +7218.66% (p=0.002 n=6)
+Tier1Match/rules=mixed-10000           122.0µ ±  1%    133.7µ ±  2%    +9.65% (p=0.002 n=6)    5053.6µ ±  3%   +4043.13% (p=0.002 n=6)
+Tier1Match/rules=lit-100               127.1n ±  3%    566.8n ±  7%  +346.12% (p=0.002 n=6)   43669.0n ±  2%  +34271.51% (p=0.002 n=6)
+Tier1Match/rules=wild-100              753.5n ±  3%    923.6n ±  2%   +22.57% (p=0.002 n=6)   71295.0n ±  3%   +9361.84% (p=0.002 n=6)
+Tier1Match/rules=anchored-100          542.8n ±  2%    851.3n ±  2%   +56.85% (p=0.002 n=6)   10090.5n ±  5%   +1759.14% (p=0.002 n=6)
+Tier1Match/rules=dir-100               449.3n ±  3%    738.4n ± 10%   +64.34% (p=0.002 n=6)   55541.0n ±  3%  +12261.67% (p=0.002 n=6)
+Tier1Match/rules=wild-complex          5.854µ ±  4%    5.436µ ±  4%    -7.13% (p=0.002 n=6)   308.514µ ±  2%   +5170.59% (p=0.002 n=6)
+Tier1Match/rules=moby-root             455.6n ±  2%    407.6n ±  2%   -10.51% (p=0.002 n=6)   21300.0n ±  3%   +4575.67% (p=0.002 n=6)
+Tier1MatchSplit/rules=mixed-100/hit    553.9n ±  2%    777.5n ±  2%   +40.38% (p=0.002 n=6)   41275.5n ±  4%   +7352.47% (p=0.002 n=6)
+Tier1MatchSplit/rules=mixed-100/miss   657.8n ±  2%   1113.5n ±  3%   +69.28% (p=0.002 n=6)   39244.0n ±  5%   +5865.95% (p=0.002 n=6)
+geomean                                4.898µ          6.347µ         +29.60%                   393.2µ         +7928.72%
+
+                                     │   go-ignore    │                 git-pkgs                 │                  sabhiram                   │
+                                     │      B/op      │     B/op      vs base                    │      B/op       vs base                     │
+Tier1Compile/rules=mixed-10            4.133Ki ± 0%     4.273Ki ± 0%    +3.40% (p=0.002 n=6)       231.187Ki ± 0%  +5493.93% (p=0.002 n=6)
+Tier1Compile/rules=mixed-100           34.40Ki ± 0%     36.47Ki ± 0%    +6.02% (p=0.002 n=6)       2135.53Ki ± 0%  +6108.23% (p=0.002 n=6)
+Tier1Compile/rules=mixed-1000          330.2Ki ± 0%     417.8Ki ± 0%   +26.50% (p=0.002 n=6)       21344.9Ki ± 0%  +6363.40% (p=0.002 n=6)
+Tier1Compile/rules=mixed-10000         3.371Mi ± 0%     4.623Mi ± 0%   +37.12% (p=0.002 n=6)       211.853Mi ± 0%  +6184.36% (p=0.002 n=6)
+Tier1Compile/rules=lit-100             29.74Ki ± 0%     34.80Ki ± 0%   +17.02% (p=0.002 n=6)       2058.06Ki ± 0%  +6819.66% (p=0.002 n=6)
+Tier1Compile/rules=wild-100            34.71Ki ± 0%     34.45Ki ± 0%    -0.77% (p=0.002 n=6)       2119.58Ki ± 0%  +6006.36% (p=0.002 n=6)
+Tier1Compile/rules=anchored-100        36.75Ki ± 0%     38.37Ki ± 0%    +4.40% (p=0.002 n=6)       2182.99Ki ± 0%  +5840.12% (p=0.002 n=6)
+Tier1Compile/rules=dir-100             32.65Ki ± 0%     36.79Ki ± 0%   +12.68% (p=0.002 n=6)       2095.49Ki ± 0%  +6318.34% (p=0.002 n=6)
+Tier1Compile/rules=wild-complex        191.2Ki ± 0%     162.6Ki ± 0%   -14.96% (p=0.002 n=6)       11233.3Ki ± 0%  +5773.88% (p=0.002 n=6)
+Tier1Compile/rules=moby-root           6.562Ki ± 0%     8.320Ki ± 0%   +26.79% (p=0.002 n=6)       385.935Ki ± 0%  +5780.91% (p=0.002 n=6)
+Tier1Match/rules=mixed-10                0.000 ± 0%       0.000 ± 0%         ~ (p=1.000 n=6) ¹         0.000 ± 0%          ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-100               3.000 ± 0%       0.000 ± 0%  -100.00% (p=0.002 n=6)           0.000 ± 0%   -100.00% (p=0.002 n=6)
+Tier1Match/rules=mixed-1000              3.000 ± 0%       0.000 ± 0%  -100.00% (p=0.002 n=6)           0.000 ± 0%   -100.00% (p=0.002 n=6)
+Tier1Match/rules=mixed-10000             4.000 ± 0%       0.000 ± 0%  -100.00% (p=0.002 n=6)           1.000 ±  ?    -75.00% (p=0.002 n=6)
+Tier1Match/rules=lit-100                 0.000 ± 0%       0.000 ± 0%         ~ (p=1.000 n=6) ¹         0.000 ± 0%          ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-100                15.00 ± 0%        0.00 ± 0%  -100.00% (p=0.002 n=6)            0.00 ± 0%   -100.00% (p=0.002 n=6)
+Tier1Match/rules=anchored-100            0.000 ± 0%       0.000 ± 0%         ~ (p=1.000 n=6) ¹         0.000 ± 0%          ~ (p=1.000 n=6) ¹
+Tier1Match/rules=dir-100                 13.00 ± 0%        0.00 ± 0%  -100.00% (p=0.002 n=6)            0.00 ± 0%   -100.00% (p=0.002 n=6)
+Tier1Match/rules=wild-complex            9.000 ± 0%       0.000 ± 0%  -100.00% (p=0.002 n=6)           0.000 ± 0%   -100.00% (p=0.002 n=6)
+Tier1Match/rules=moby-root               0.000 ± 0%       0.000 ± 0%         ~ (p=1.000 n=6) ¹         0.000 ± 0%          ~ (p=1.000 n=6) ¹
+Tier1MatchSplit/rules=mixed-100/hit      7.000 ± 0%       0.000 ± 0%  -100.00% (p=0.002 n=6)           0.000 ± 0%   -100.00% (p=0.002 n=6)
+Tier1MatchSplit/rules=mixed-100/miss     0.000 ± 0%       0.000 ± 0%         ~ (p=1.000 n=6) ¹         0.000 ± 0%          ~ (p=1.000 n=6) ¹
+geomean                                             ²                 ?                      ² ³                   ?                       ² ³
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+³ ratios must be >0 to compute geomean
+
+                                     │  go-ignore   │                 git-pkgs                 │                   sabhiram                   │
+                                     │  allocs/op   │  allocs/op    vs base                    │   allocs/op     vs base                      │
+Tier1Compile/rules=mixed-10            15.00 ± 0%       40.00 ± 0%    +166.67% (p=0.002 n=6)       2610.00 ± 0%    +17300.00% (p=0.002 n=6)
+Tier1Compile/rules=mixed-100           29.00 ± 0%      313.00 ± 0%    +979.31% (p=0.002 n=6)      23945.00 ± 0%    +82468.97% (p=0.002 n=6)
+Tier1Compile/rules=mixed-1000          40.00 ± 0%     3059.00 ± 0%   +7547.50% (p=0.002 n=6)     239182.00 ± 0%   +597855.00% (p=0.002 n=6)
+Tier1Compile/rules=mixed-10000         156.0 ± 0%     30519.0 ± 0%  +19463.46% (p=0.002 n=6)     2403360.5 ± 0%  +1540515.71% (p=0.002 n=6)
+Tier1Compile/rules=lit-100             12.00 ± 0%      313.00 ± 0%   +2508.33% (p=0.002 n=6)      22783.00 ± 0%   +189758.33% (p=0.002 n=6)
+Tier1Compile/rules=wild-100            27.00 ± 0%      319.00 ± 0%   +1081.48% (p=0.002 n=6)      23379.00 ± 0%    +86488.89% (p=0.002 n=6)
+Tier1Compile/rules=anchored-100        26.00 ± 0%      313.00 ± 0%   +1103.85% (p=0.002 n=6)      25686.00 ± 0%    +98692.31% (p=0.002 n=6)
+Tier1Compile/rules=dir-100             26.00 ± 0%      313.00 ± 0%   +1103.85% (p=0.002 n=6)      23968.00 ± 0%    +92084.62% (p=0.002 n=6)
+Tier1Compile/rules=wild-complex        35.00 ± 0%     1549.00 ± 0%   +4325.71% (p=0.002 n=6)     122047.00 ± 0%   +348605.71% (p=0.002 n=6)
+Tier1Compile/rules=moby-root           20.00 ± 0%       67.00 ± 0%    +235.00% (p=0.002 n=6)       4234.00 ± 0%    +21070.00% (p=0.002 n=6)
+Tier1Match/rules=mixed-10              0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-100             0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-1000            0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1Match/rules=mixed-10000           0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1Match/rules=lit-100               0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-100              0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1Match/rules=anchored-100          0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1Match/rules=dir-100               0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1Match/rules=wild-complex          0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1Match/rules=moby-root             0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1MatchSplit/rules=mixed-100/hit    0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+Tier1MatchSplit/rules=mixed-100/miss   0.000 ± 0%       0.000 ± 0%           ~ (p=1.000 n=6) ¹       0.000 ± 0%             ~ (p=1.000 n=6) ¹
+geomean                                           ²                   +268.25%               ²                      +2509.75%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean

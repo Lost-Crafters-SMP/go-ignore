@@ -1,22 +1,10 @@
 {
   "version": 1,
   "files": [
-    {
-      "path": "README.md",
-      "sha256": "99e9b548b1a75056f45fc63179918ca4387ee75eaacb033b08e24903a094154f"
-    },
-    {
-      "path": "corpus.json",
-      "sha256": "0616d56d1868380b420c73b1089fe3cdbbfa25f70757631d673b26e0b3bfb9ae"
-    },
-    {
-      "path": "directory-cases.json",
-      "sha256": "5d7b12e251fd296ce1cc836587fb223d361345e13539624b82165fa8ebb7eeeb"
-    },
-    {
-      "path": "policy-cases.json",
-      "sha256": "3ec61557b7dfb9c1f1f9635faeabe8461d65e82064e0e2bd66ea5b3bfc5dcade"
-    }
+    {"path":"README.md","sha256":"2231542332b09d8a293370533763dc905ad6a3cf0a4f7ce8f48bd1b7ce8119d5"},
+    {"path":"corpus.json","sha256":"0616d56d1868380b420c73b1089fe3cdbbfa25f70757631d673b26e0b3bfb9ae"},
+    {"path":"directory-cases.json","sha256":"c3a28b141baa6a682bd397462b4e7cb2945eeb0da9df354d91e478596ec1fd45"},
+    {"path":"policy-cases.json","sha256":"3ec61557b7dfb9c1f1f9635faeabe8461d65e82064e0e2bd66ea5b3bfc5dcade"}
   ],
   "caseCount": 56,
   "policyCaseCount": 9

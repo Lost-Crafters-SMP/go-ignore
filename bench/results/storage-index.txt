@@ -1,0 +1,30 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=true-16         	27444064	        45.00 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=true-16         	27259468	        44.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=true-16         	27293941	        47.55 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=true-16         	28025334	        46.17 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=true-16         	24927450	        45.54 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=true-16         	27981615	        43.47 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=false-16        	 1437166	       830.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=false-16        	 1383146	       854.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=false-16        	 1410058	       841.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=false-16        	 1437957	       835.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=false-16        	 1435549	       834.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=100/indexed=false-16        	 1400404	       846.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=true-16        	21541394	        46.84 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=true-16        	22587979	        46.86 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=true-16        	27357660	        46.87 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=true-16        	25777237	        45.17 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=true-16        	26475045	        45.92 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=true-16        	25825222	        46.63 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=false-16       	  165290	      7637 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=false-16       	  153476	      7709 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=false-16       	  156516	      7833 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=false-16       	  148072	      7941 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=false-16       	  166260	      7924 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiteralIndexTradeoff/rules=1000/indexed=false-16       	  166034	      7757 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	go.lostcrafters.com/ignore	28.944s

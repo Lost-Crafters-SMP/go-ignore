@@ -1,12 +1,15 @@
 # Behavioural specification
 
+This document specifies the matching and filesystem policy contracts for
+`go.lostcrafters.com/ignore`. The adjacent JSON files are executable regression
+fixtures; `manifest.json` records their counts and SHA-256 checksums.
+
 ## Scope and package
 
-Module `go.lostcrafters.com/ignore`, root package `ignore`, stdlib only; current
-toolchain pin Go 1.27.1. The core includes a byte-oriented parser, compact immutable
-compilation, pure rule scanning, ordering, provenance and diagnostics. Matching
-does no filesystem I/O or subprocess execution. No indexes, caches, filesystem
-loaders, walkers, parallel traversal, Git config discovery or history API in the core.
+Module `go.lostcrafters.com/ignore`, root package `ignore`, stdlib-only runtime.
+`Compile` and `Matcher` provide pure byte-oriented matching, ordering, winning-rule
+metadata and diagnostics without filesystem I/O or subprocess execution. `Policy`
+and `Walk` provide optional filesystem discovery and traversal.
 
 Git is an **external executable oracle only**, not a code dependency. Compatibility
 means high-fidelity agreement on a growing eligible corpus with recorded versions,
@@ -43,9 +46,10 @@ are project semantics and need independent tests rather than fabricated Git answ
   this differs from Raw. No public standalone Rule.Match or compiled fields.
 - `Diagnostic`: detached `{Source string, Line int, Pattern string, Kind,
   Message string}`. Stable kinds for malformed patterns and oversize sources;
-  exact enum names/error messages can be chosen and documented independently.
+  kinds are `MalformedPattern` and `OversizeSource`. Invalid API inputs wrap
+  `ErrInvalidInput`; diagnostic message text is not a stable contract.
 - Rank constants: global 100, info-exclude 200, per-directory 300, command 400.
-  Fixed ranks never include directory depth. No mutable builder in the core.
+  Fixed ranks never include directory depth. There is no mutable builder.
 
 Match paths are nonempty clean slash-relative byte strings: reject leading/trailing
 slash, empty/`.`/`..` components and NUL. Backslash is a literal name byte, not an
@@ -96,7 +100,7 @@ with context and `%w`; ordinary API misuse must not panic.
   blank, cntrl, digit, graph, lower, print, punct, space, upper, xdigit. A class
   never consumes `/`. A slash inside `a[b/c]d` is class content, not a component
   split: `abd` and `acd` match, `a/d` does not. Reversed ranges add no range members;
-  interactions/folding require regression tests, with regression coverage.
+  interactions with folding are covered by regression tests.
 - A pattern with no slash applies to basenames at any depth below its scope.
   A leading or contained slash anchors relative to scope. The raw presence of a
   slash inside a class or escape still distinguishes a path pattern from a basename
@@ -110,7 +114,7 @@ with context and `%w`; ordinary API misuse must not panic.
   Slash-form exclusion alone is not a traversal block: `a/**` can exclude `a/`
   while `!a/keep` still includes the child; an own-source empty rule can exclude
   `a/` without excluding `a/keep`. Never use a canonical slash-form Match result
-  as the sole future walker pruning test. The later walk API is outside this scope.
+  as proof of a strict-ancestor block. The walker contract is described below.
 - Canonical directory queries use a slash-suffixed endpoint with an empty final
   basename; patterns such as `d/*`, `d/**` or empty basename rules can match `d/`.
   Direct exclusion is Exclude with a rule, **not** a block naming the endpoint.
@@ -145,8 +149,8 @@ unique ID, explicit ignore files, one query and independently stated expected Gi
 verdict/provenance. Cases are isolated, so a path is not simultaneously a file and
 directory. These cases are not copied upstream test tables. Their expected outputs
 are checked by executing Git in scratch repositories, never reading matcher code.
-Expand cases monotonically and record origin, exact version/build, platform and
-eligibility. The live oracle records its Git version and platform.
+Expand cases monotonically and record exact version/build, platform and eligibility
+when running the live oracle tests.
 Every case's origin is the file's project-authored origin plus that case's exact
 files/query/expected data. A `block` record is the library's strict-ancestor
 projection verified by additional bare-directory probes, not a Git output field.
@@ -161,11 +165,11 @@ rules have fixed rank/depth/source-sequence/line/action; candidates list the
 applicable matching rule IDs, ordered as strict ancestors then endpoint. Its
 expected action/rule/block is a specification assertion, not Git evidence.
 Rule IDs identify provenance; in blocked results the ID belongs to Block.Rule,
-not an endpoint rule. Regression tests must combine this policy with actual
+not an endpoint rule. Tests combine this policy with actual
 Source inputs and pattern matching; the supplied abstraction tests precedence,
 not parser correctness.
 
-External Git oracle protocol:
+The runner in `spec_test.go` uses this protocol:
 create an isolated untracked scratch repo, materialise files/directories faithfully,
 configure excludes/case explicitly, suppress inherited Git/home/XDG/template config,
 then, in fresh processes **for each distinct query**, run
@@ -188,3 +192,64 @@ Unmaterialised or wrong-dtype queries are not successful parity evidence. Keep l
 POSIX names even if Windows cannot create them; rerun them where representable.
 Do not conflate slash/no-slash directory arguments or case-folding modes.
 
+## Filesystem policy and traversal
+
+- `NewPolicy(PolicyOptions) (*Policy, error)` validates a required root and a
+  nonempty source list, copies configuration, and resolves the root once to an
+  absolute cleaned path. Construction does not open files or require an existing
+  root. `Root()` returns that resolved path.
+- `SourceSpec` supplies `Filename`, fixed `Rank`, `Optional` and `Nested`.
+  Filenames are clean slash-relative paths; nested filenames must be basenames.
+  Spec order breaks equal rank/depth ties. There is no implicit Git config lookup.
+- `Policy.Match` accepts the matching path contract above. Discovery loads the
+  root-to-parent chain, not the endpoint directory's own sources. Each source is
+  read at most once per Policy; loaded rules and the first error per directory
+  remain cached. Construct a new Policy to observe filesystem changes.
+- Optional sources ignore absence and host errors indicating that the directory
+  cannot exist; existing unreadable files and required-source failures are errors.
+  NUL source bytes are errors. Source labels are root-relative filenames.
+- `PolicyDecision` embeds `Decision` and adds `Reserved`. Reserved clean paths
+  exclude themselves and descendants before discovery, without a Rule; they are
+  byte-exact, unaffected by folding, and cannot be negated.
+- `MatchPath` requires an absolute path lexically inside the root, excluding the
+  root itself. It does not detect physical escapes through intermediate symlinks.
+  Discovery follows host file-opening semantics; Windows name normalization and
+  case-insensitive filesystem lookup differ from POSIX byte-faithful names.
+  Reading a FIFO source can block.
+- `Diagnostics()` returns detached, deterministic source/line/kind-sorted
+  diagnostics for discovered sources, reporting each source file once. Policy
+  supports concurrent matching, diagnostics and walking.
+- `Walk(start, callback)` accepts a root-relative subtree (including `""`) or an
+  absolute subtree inside the root. Paths passed to the callback remain
+  policy-root-relative. The traversal root is not reported. Entries are visited
+  lexicographically; symlinks are reported as non-directories and never followed.
+  Source files are ordinary candidates. Ignored/reserved directories are reported
+  and then pruned. `filepath.SkipDir` is honored; other callback errors abort
+  unchanged, and filesystem/discovery errors abort with path context.
+
+`Walk` deliberately prunes canonical endpoint exclusions as well as blocks. For
+`bin/*` followed by `!bin/keep`, this can prune `bin/` even though pure matching
+can include the child. It agrees with the slash-form `check-ignore` verdict, not
+necessarily `git status` traversal. See the [benchmark methodology](../../bench/README.md#correctness-verification).
+
+## Regression and resource requirements
+
+- Check verdict, source/line/pattern and blocking metadata, not only booleans.
+  Keep eligible, skipped, duplicate and failed oracle queries separate.
+- The slow reference uses no production parser/class helpers. Deterministic
+  comparisons, parser/equivalence/index/policy fuzz targets and minimized inputs
+  in `testdata/fuzz/` cover escapes, classes, folding and invalid patterns.
+  CI runs parser and pattern equivalence fuzzing for 1,000,000 executions each.
+- Matching work and scratch must be bounded, without unbounded backtracking.
+  An isolated 1 MiB literal source must retain at most 8× input plus 64 KiB
+  metadata. Resource tests cover stars {8,16,24}, lengths {64,256,1024}, classes,
+  directory adversaries and source-cap boundaries. Timeouts fail in killable
+  child processes, not detached goroutines.
+- Benchmark compilation and matching across rule counts and depths, including
+  include/exclude/miss/block/directory/cross-separator outcomes. Track time,
+  allocation bytes/counts, retained heap and peak RSS separately. Low allocation
+  counts are measured objectives, never permission to weaken semantics.
+- CI covers Linux, macOS and Windows, with race checks, live Git and resource
+  tests. Local opt-in commands and benchmark reproduction are in
+  [the repository README](../../README.md#development) and
+  [benchmark documentation](../benchmarks/README.md).
