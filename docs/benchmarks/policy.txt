@@ -1,0 +1,51 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkPolicyMatch/cold-miss-16         	     158	    370271 ns/op	   38862 B/op	     343 allocs/op
+BenchmarkPolicyMatch/cold-miss-16         	     171	    346122 ns/op	   38827 B/op	     343 allocs/op
+BenchmarkPolicyMatch/cold-miss-16         	     175	    342307 ns/op	   38842 B/op	     343 allocs/op
+BenchmarkPolicyMatch/cold-hit-16          	     175	    343215 ns/op	   38840 B/op	     343 allocs/op
+BenchmarkPolicyMatch/cold-hit-16          	     171	    368836 ns/op	   38841 B/op	     343 allocs/op
+BenchmarkPolicyMatch/cold-hit-16          	     163	    364959 ns/op	   38828 B/op	     343 allocs/op
+BenchmarkPolicyMatch/warm-miss-16         	   65617	       821.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-miss-16         	   74700	      1024 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-miss-16         	   71166	       796.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-hit-16          	   73150	       816.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-hit-16          	   65401	       872.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-hit-16          	   73812	       775.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-dir-16          	   78297	       721.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-dir-16          	   79345	       738.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-dir-16          	   73071	       730.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyWalk/discover-16           	       1	  80186600 ns/op	 1765928 B/op	   15265 allocs/op
+BenchmarkPolicyWalk/discover-16           	       3	  19807200 ns/op	 1676997 B/op	   15261 allocs/op
+BenchmarkPolicyWalk/discover-16           	       3	  18489967 ns/op	 1633296 B/op	   15260 allocs/op
+BenchmarkPolicyWalk/cached-16             	       5	  11085440 ns/op	  572459 B/op	    6051 allocs/op
+BenchmarkPolicyWalk/cached-16             	       5	  10590300 ns/op	  546276 B/op	    6050 allocs/op
+BenchmarkPolicyWalk/cached-16             	       5	  10641520 ns/op	  546225 B/op	    6050 allocs/op
+BenchmarkCompile/10000-16                 	      33	   1744127 ns/op	  79.63 MB/s	 3286944 B/op	   20056 allocs/op
+BenchmarkCompile/10000-16                 	      36	   1724131 ns/op	  80.56 MB/s	 3286789 B/op	   20056 allocs/op
+BenchmarkCompile/10000-16                 	      34	   1716147 ns/op	  80.93 MB/s	 3286789 B/op	   20056 allocs/op
+BenchmarkCompile/100000-16                	       2	  26743550 ns/op	  55.67 MB/s	33492936 B/op	  200302 allocs/op
+BenchmarkCompile/100000-16                	       3	  17548200 ns/op	  84.85 MB/s	33486141 B/op	  200294 allocs/op
+BenchmarkCompile/100000-16                	       3	  19589300 ns/op	  76.01 MB/s	33482744 B/op	  200290 allocs/op
+BenchmarkMatch/rules=10000/depth=512/miss-16         	    2924	     18662 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/miss-16         	    3010	     19088 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/miss-16         	    3255	     21454 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/exclude-16      	    2277	     24922 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/exclude-16      	    2072	     25908 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/exclude-16      	    2475	     24773 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/include-16      	    2445	     24761 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/include-16      	    2370	     25287 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/include-16      	    2085	     26078 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/block-16        	   17638	      3409 ns/op	      24 B/op	       1 allocs/op
+BenchmarkMatch/rules=10000/depth=512/block-16        	   17377	      3416 ns/op	      24 B/op	       1 allocs/op
+BenchmarkMatch/rules=10000/depth=512/block-16        	   17740	      3375 ns/op	      24 B/op	       1 allocs/op
+BenchmarkMatch/rules=10000/depth=512/directory-16    	    2714	     22724 ns/op	    2304 B/op	       2 allocs/op
+BenchmarkMatch/rules=10000/depth=512/directory-16    	    2210	     32744 ns/op	    2304 B/op	       2 allocs/op
+BenchmarkMatch/rules=10000/depth=512/directory-16    	    1706	     30456 ns/op	    2304 B/op	       2 allocs/op
+BenchmarkMatch/rules=10000/depth=512/cross-16        	    2598	     31431 ns/op	    2304 B/op	       2 allocs/op
+BenchmarkMatch/rules=10000/depth=512/cross-16        	    2582	     33180 ns/op	    2304 B/op	       2 allocs/op
+BenchmarkMatch/rules=10000/depth=512/cross-16        	    2373	     24535 ns/op	    2304 B/op	       2 allocs/op
+PASS
+ok  	go.lostcrafters.com/ignore	3.384s

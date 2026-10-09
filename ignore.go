@@ -268,7 +268,14 @@ func Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error) {
 		return 0
 	})
 	m.buildIndex()
-	slices.SortStableFunc(m.diagnostics, func(a, b Diagnostic) int {
+	sortDiagnostics(m.diagnostics)
+	return m, m.Diagnostics(), nil
+}
+
+// sortDiagnostics orders diagnostics by source label, line and kind, with
+// stable input order breaking ties.
+func sortDiagnostics(diagnostics []Diagnostic) {
+	slices.SortStableFunc(diagnostics, func(a, b Diagnostic) int {
 		if order := strings.Compare(a.Source, b.Source); order != 0 {
 			return order
 		}
@@ -280,7 +287,6 @@ func Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error) {
 		}
 		return strings.Compare(string(a.Kind), string(b.Kind))
 	})
-	return m, m.Diagnostics(), nil
 }
 
 func trimSpaces(raw string) string {

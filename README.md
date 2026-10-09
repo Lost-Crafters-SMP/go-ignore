@@ -32,4 +32,33 @@ Standard ranks are global 100, info-exclude 200, per-directory 300, command 400;
 custom ranks are library-specific policy, not a Git compatibility claim.
 Diagnostics use `MalformedPattern` and `OversizeSource` kinds. Invalid API inputs
 wrap `ErrInvalidInput`; malformed rules are inert, while oversized sources are
-wholly skipped. A zero-value matcher is usable. Traversal is not implemented.
+wholly skipped. A zero-value matcher is usable.
+
+## Policy and traversal API
+
+```go
+policy, err := ignore.NewPolicy(ignore.PolicyOptions{
+    Root: "repo", // required; resolved once, never re-read from CWD
+    Sources: []ignore.SourceSpec{
+        {Filename: ".customignore", Rank: ignore.RankPerDirectory, Optional: true, Nested: true},
+        {Filename: "tools/excludes", Rank: ignore.RankGlobal, Optional: true},
+    },
+    Reserved: []string{".git"}, // unconditional, unnegatable, subtree-covering
+})
+decision, err := policy.Match("nested/file.custom", false)
+decision, err = policy.MatchPath(absPath, false) // lexical containment
+err = policy.Walk("subtree", func(rel string, isDir bool, d ignore.PolicyDecision) error {
+    if d.Ignored() {
+        return nil // pruned automatically when a directory
+    }
+    return nil
+})
+```
+
+`PolicyDecision` embeds `Decision` (winning source label, line, blocking
+ancestor) plus `Reserved`. Discovery is lazy and cached per directory for the
+Policy's lifetime; the first error per directory is returned deterministically.
+`Walk` prunes ignored/reserved directories after reporting them, honours
+`filepath.SkipDir`, aborts on the first I/O or discovery error, never follows
+symlinks and treats ignore source files as ordinary candidates. Traversal roots
+may be any subtree; the policy namespace stays root-relative.
