@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "origin": "Library-specific ordering/blocking specification, not Git observations. Candidate matches are explicit inputs to isolate policy from pattern matching.",
+  "rules": [
+    {"id":"global-exclude","rank":100,"depth":0,"seq":0,"line":1,"action":"Exclude"},
+    {"id":"root-exclude","rank":300,"depth":0,"seq":1,"line":1,"action":"Exclude"},
+    {"id":"nested-include","rank":300,"depth":2,"seq":2,"line":1,"action":"Include"},
+    {"id":"command-include","rank":400,"depth":0,"seq":3,"line":1,"action":"Include"},
+    {"id":"command-exclude","rank":400,"depth":0,"seq":3,"line":2,"action":"Exclude"},
+    {"id":"late-root-include","rank":300,"depth":0,"seq":4,"line":1,"action":"Include"},
+    {"id":"late-nested-exclude","rank":300,"depth":2,"seq":5,"line":1,"action":"Exclude"}
+  ],
+  "cases": [
+    {"id":"higher-rank-defeats-depth","candidates":[{"path":"a/b/hit","matches":["nested-include","command-exclude"]}],"expected":{"action":"Exclude","rule":"command-exclude","block":""}},
+    {"id":"higher-rank-negation","candidates":[{"path":"a/b/hit","matches":["root-exclude","command-include"]}],"expected":{"action":"Include","rule":"command-include","block":""}},
+    {"id":"same-rank-depth-before-sequence","candidates":[{"path":"a/b/hit","matches":["nested-include","late-root-include","root-exclude"]}],"expected":{"action":"Include","rule":"nested-include","block":""}},
+    {"id":"same-depth-source-sequence","candidates":[{"path":"a/b/hit","matches":["nested-include","late-nested-exclude"]}],"expected":{"action":"Exclude","rule":"late-nested-exclude","block":""}},
+    {"id":"physical-line-tie-break","candidates":[{"path":"hit","matches":["command-include","command-exclude"]}],"expected":{"action":"Exclude","rule":"command-exclude","block":""}},
+    {"id":"higher-rank-reopens-parent-before-block","candidates":[{"path":"a","matches":["root-exclude","command-include"]},{"path":"a/hit","matches":["global-exclude"]}],"expected":{"action":"Exclude","rule":"global-exclude","block":""}},
+    {"id":"higher-rank-child-does-not-reopen-block","candidates":[{"path":"a","matches":["root-exclude"]},{"path":"a/hit","matches":["command-include"]}],"expected":{"action":"NoMatch","rule":"root-exclude","block":"a"}},
+    {"id":"first-block-only","candidates":[{"path":"a","matches":["global-exclude"]},{"path":"a/b","matches":["command-exclude"]},{"path":"a/b/hit","matches":["command-include"]}],"expected":{"action":"NoMatch","rule":"global-exclude","block":"a"}},
+    {"id":"no-match","candidates":[{"path":"hit","matches":[]}],"expected":{"action":"NoMatch","rule":"","block":""}}
+  ]
+}

@@ -1,0 +1,430 @@
+{
+  "schema": 1,
+  "origin": "Project-authored isolated directory queries; expected outputs verified with external Git",
+  "cases": [
+    {
+      "id": "nested-relative-anchor",
+      "files": {
+        "a/.gitignore": "/hit\n"
+      },
+      "query": {
+        "Path": "a/hit"
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": "a/.gitignore",
+        "Line": 1,
+        "Pattern": "/hit"
+      }
+    },
+    {
+      "id": "nested-relative-no-descendant-anchor",
+      "files": {
+        "a/.gitignore": "/hit\n"
+      },
+      "query": {
+        "Path": "a/sub/hit"
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "",
+        "Line": 0,
+        "Pattern": ""
+      }
+    },
+    {
+      "id": "nested-basename-depth",
+      "files": {
+        "a/.gitignore": "hit\n"
+      },
+      "query": {
+        "Path": "a/sub/hit"
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": "a/.gitignore",
+        "Line": 1,
+        "Pattern": "hit"
+      }
+    },
+    {
+      "id": "nested-sibling-inapplicable",
+      "files": {
+        "a/.gitignore": "hit\n"
+      },
+      "query": {
+        "Path": "b/hit"
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "",
+        "Line": 0,
+        "Pattern": ""
+      }
+    },
+    {
+      "id": "own-source-bare-directory",
+      "files": {
+        "a/.gitignore": "*\n"
+      },
+      "query": {
+        "Path": "a",
+        "IsDir": true,
+        "NoSlash": true
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "",
+        "Line": 0,
+        "Pattern": ""
+      }
+    },
+    {
+      "id": "own-source-root-anchor-empty",
+      "files": {
+        "a/.gitignore": "/\n"
+      },
+      "query": {
+        "Path": "a",
+        "IsDir": true
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": "a/.gitignore",
+        "Line": 1,
+        "Pattern": "/"
+      }
+    },
+    {
+      "id": "blocked-nested-negation",
+      "files": {
+        ".gitignore": "a/\n",
+        "a/.gitignore": "!keep\n"
+      },
+      "query": {
+        "Path": "a/keep"
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a/"
+      },
+      "block": {
+        "Directory": "a",
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a/"
+      }
+    },
+    {
+      "id": "blocked-deep-negation",
+      "files": {
+        ".gitignore": "a/\n!a/sub/keep\n",
+        "a/sub/.gitignore": "!keep\n"
+      },
+      "query": {
+        "Path": "a/sub/keep"
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a/"
+      },
+      "block": {
+        "Directory": "a",
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a/"
+      }
+    },
+    {
+      "id": "reopen-before-block",
+      "files": {
+        ".gitignore": "a/\n!a/\n",
+        "a/.gitignore": "keep\n"
+      },
+      "query": {
+        "Path": "a/keep"
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": "a/.gitignore",
+        "Line": 1,
+        "Pattern": "keep"
+      }
+    },
+    {
+      "id": "reopen-and-child-negation",
+      "files": {
+        ".gitignore": "a/\n!a/\n*.tmp\n",
+        "a/.gitignore": "!keep.tmp\n"
+      },
+      "query": {
+        "Path": "a/keep.tmp"
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "a/.gitignore",
+        "Line": 1,
+        "Pattern": "!keep.tmp"
+      }
+    },
+    {
+      "id": "parent-child-negation-does-not-reopen",
+      "files": {
+        ".gitignore": "a\n!a/keep\n"
+      },
+      "query": {
+        "Path": "a/keep"
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a"
+      },
+      "block": {
+        "Directory": "a",
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a"
+      }
+    },
+    {
+      "id": "deeper-source-over-root-negation",
+      "files": {
+        ".gitignore": "!*.tmp\n",
+        "a/.gitignore": "*.tmp\n"
+      },
+      "query": {
+        "Path": "a/x.tmp"
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": "a/.gitignore",
+        "Line": 1,
+        "Pattern": "*.tmp"
+      }
+    },
+    {
+      "id": "info-below-directory",
+      "files": {
+        ".git/info/exclude": "hit\n",
+        "a/.gitignore": "!hit\n"
+      },
+      "query": {
+        "Path": "a/hit"
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "a/.gitignore",
+        "Line": 1,
+        "Pattern": "!hit"
+      }
+    },
+    {
+      "id": "directory-self-direct-not-block",
+      "files": {
+        ".gitignore": "a/\n"
+      },
+      "query": {
+        "Path": "a",
+        "IsDir": true
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a/"
+      }
+    },
+    {
+      "id": "slash-glob-file-endpoint",
+      "files": {
+        ".gitignore": "a/**\n"
+      },
+      "query": {
+        "Path": "a"
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "",
+        "Line": 0,
+        "Pattern": ""
+      }
+    },
+    {
+      "id": "slash-glob-bare-directory",
+      "files": {
+        ".gitignore": "a/**\n"
+      },
+      "query": {
+        "Path": "a",
+        "IsDir": true,
+        "NoSlash": true
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "",
+        "Line": 0,
+        "Pattern": ""
+      }
+    },
+    {
+      "id": "slash-glob-child-no-parent-block",
+      "files": {
+        ".gitignore": "a/**\n!a/keep\n"
+      },
+      "query": {
+        "Path": "a/keep"
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": ".gitignore",
+        "Line": 2,
+        "Pattern": "!a/keep"
+      }
+    },
+    {
+      "id": "own-source-slash-does-not-block-child",
+      "files": {
+        "a/.gitignore": " \n"
+      },
+      "query": {
+        "Path": "a/keep"
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "",
+        "Line": 0,
+        "Pattern": ""
+      }
+    },
+    {
+      "id": "first-block-not-deeper-rule",
+      "files": {
+        ".gitignore": "a/\na/sub/\n"
+      },
+      "query": {
+        "Path": "a/sub/keep"
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a/"
+      },
+      "block": {
+        "Directory": "a",
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a/"
+      }
+    },
+    {
+      "id": "deeper-block",
+      "files": {
+        ".gitignore": "a/sub/\n",
+        "a/sub/.gitignore": "!keep\n"
+      },
+      "query": {
+        "Path": "a/sub/keep"
+      },
+      "expected": {
+        "Ignored": true,
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a/sub/"
+      },
+      "block": {
+        "Directory": "a/sub",
+        "Source": ".gitignore",
+        "Line": 1,
+        "Pattern": "a/sub/"
+      }
+    },
+    {
+      "id": "negated-directory-slash-no-winner",
+      "files": {
+        ".gitignore": "a/\n!a/\n"
+      },
+      "query": {
+        "Path": "a",
+        "IsDir": true
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "",
+        "Line": 0,
+        "Pattern": ""
+      }
+    },
+    {
+      "id": "negated-directory-bare-winner",
+      "files": {
+        ".gitignore": "a/\n!a/\n"
+      },
+      "query": {
+        "Path": "a",
+        "IsDir": true,
+        "NoSlash": true
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": ".gitignore",
+        "Line": 2,
+        "Pattern": "!a/"
+      }
+    },
+    {
+      "id": "negated-directory-empty-basename-winner",
+      "files": {
+        ".gitignore": "*\n!*\n"
+      },
+      "query": {
+        "Path": "a",
+        "IsDir": true
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": ".gitignore",
+        "Line": 2,
+        "Pattern": "!*"
+      }
+    },
+    {
+      "id": "slash-only-file-endpoint",
+      "files": {
+        ".gitignore": "/\n"
+      },
+      "query": {
+        "Path": "file"
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "",
+        "Line": 0,
+        "Pattern": ""
+      }
+    },
+    {
+      "id": "slash-only-bare-directory",
+      "files": {
+        ".gitignore": "/\n"
+      },
+      "query": {
+        "Path": "a",
+        "IsDir": true,
+        "NoSlash": true
+      },
+      "expected": {
+        "Ignored": false,
+        "Source": "",
+        "Line": 0,
+        "Pattern": ""
+      }
+    }
+  ]
+}

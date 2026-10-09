@@ -1,0 +1,190 @@
+# Behavioural specification
+
+## Scope and package
+
+Module `go.lostcrafters.com/ignore`, root package `ignore`, stdlib only; current
+toolchain pin Go 1.27.1. The core includes a byte-oriented parser, compact immutable
+compilation, pure rule scanning, ordering, provenance and diagnostics. Matching
+does no filesystem I/O or subprocess execution. No indexes, caches, filesystem
+loaders, walkers, parallel traversal, Git config discovery or history API in the core.
+
+Git is an **external executable oracle only**, not a code dependency. Compatibility
+means high-fidelity agreement on a growing eligible corpus with recorded versions,
+not a guarantee over every possible input or future release. Arbitrary custom ranks
+are project semantics and need independent tests rather than fabricated Git answers.
+
+## Matching API
+
+- `Source`: value fields `Label string`, `Scope string`, `Rank int`, `Data []byte`.
+  Label is provenance, not a filename to open. Scope `""` is root. Slice order
+  assigns source sequence internally. Compile owns input bytes after return.
+- `Options`: `CaseFold bool` (default false); `MaxSourceBytes int64` (0 = 100 MiB,
+  positive values may lower the cap; reject negative or above-default values).
+- `Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error)`.
+  No partial matcher on API validation failure. Oversized sources are wholly
+  skipped with one diagnostic, not partially compiled. Malformed patterns produce
+  never-matching rules and diagnostics without aborting other lines.
+- `(*Matcher).Match(path string, isDir bool) (Decision, error)`, pure and safe
+  for concurrent calls. Zero-value matcher is usable and empty; nil receiver
+  returns an API error. No caller input mutation or shared mutable scratch.
+- `(*Matcher).Diagnostics() []Diagnostic`: detached values in deterministic
+  source/line/kind order, stable source-sequence tie-breaking.
+- `Action`: `NoMatch`, `Exclude`, `Include` (zero is NoMatch).
+- `Decision`: endpoint action, endpoint `*Rule` (nil for NoMatch), optional
+  strict-ancestor `*Block`. `Ignored()` is true for a block or endpoint Exclude.
+- `Block`: directory string (tree-root-relative, no slash suffix) and winning
+  `*Rule`. Returned records must not mutate matcher state.
+- `Rule`: opaque immutable metadata with value accessors `Source() string`,
+  `Line() int`, `Raw() string`, `Pattern() string`, `Negated() bool`,
+  `DirOnly() bool`, `Scope() string`, `Rank() int`. Stable identity within a
+  matcher's lifetime; do not return mutable internal storage. Raw excludes line
+  terminator; Pattern is after trimming and removing negation/directory flags.
+  Verbose winning pattern is optional `!` + Pattern + optional directory `/`;
+  this differs from Raw. No public standalone Rule.Match or compiled fields.
+- `Diagnostic`: detached `{Source string, Line int, Pattern string, Kind,
+  Message string}`. Stable kinds for malformed patterns and oversize sources;
+  exact enum names/error messages can be chosen and documented independently.
+- Rank constants: global 100, info-exclude 200, per-directory 300, command 400.
+  Fixed ranks never include directory depth. No mutable builder in the core.
+
+Match paths are nonempty clean slash-relative byte strings: reject leading/trailing
+slash, empty/`.`/`..` components and NUL. Backslash is a literal name byte, not an
+OS separator. Source scopes use those rules except root `""`. No silent cleaning.
+`isDir=true` selects canonical trailing-slash directory semantics described below;
+directory queries without a slash are separate oracle observations. As an explicit
+library input-safety contract (not a claim about Git), any NUL in Source.Data is
+an API validation error with no partial matcher. Wrap underlying errors
+with context and `%w`; ordinary API misuse must not panic.
+
+## Behavioural specification
+
+### Source lines
+
+1. Ignore a UTF-8 BOM at the start of a source. Handle newline-separated physical
+   lines, optional final newline and CRLF; count blank/comment lines in line numbers.
+2. A truly empty line or line whose **first byte** is `#` creates no rule. Leading
+   spaces are significant; ` #name` is not a comment. Tabs are not trimmed as spaces.
+3. Remove only unescaped trailing ASCII spaces. Backslash escapes the next byte;
+   odd/even escape runs matter. Retain the escape in pattern text until interpreting
+   the pattern; Raw preserves the physical pre-trim line.
+4. Leading unescaped `!` negates a rule. A final `/` marks a directory-only rule
+   and is removed from its match text. A leading `/` anchors to source scope.
+5. A nonempty whitespace-only line becomes a **live empty basename rule**. A lone
+   `!` is its negation; lone `/` is a live directory-only empty rule observed at
+   slash-form directory endpoints. Do not drop an empty post-trim rule. Use
+   isolated cases: a later negation must not mask the error. Truly blank is different.
+6. Malformed/unclosed classes, unknown POSIX classes and a trailing lone escape
+   never match. Produce diagnostics, leave later rules active. Validate both ordinary
+   and escaped-separator pattern shapes consistently.
+
+### Pattern bytes, anchoring and directory candidates
+
+- Matching is byte-oriented, no Unicode normalisation. Optional case folding is
+  ASCII only and applies to literals, scopes, class members and ranges. High-bit
+  bytes do not acquire Unicode class or case behaviour.
+- `?` matches one non-separator byte; ordinary `*` matches zero or more non-separator
+  bytes. Runs of stars embedded in a component behave as ordinary stars.
+- A run of at least two stars has directory-crossing meaning only when bounded
+  on the left by pattern start or slash, and on the right by pattern end, slash,
+  or escaped slash. Leading/interior double-star directory spans may consume zero
+  directories. Trailing `a/**` matches entries inside `a`, not bare `a` as a file;
+  a canonical directory `a/` has a distinct observable endpoint described below.
+- `\x` represents literal byte x. Escaped `/` may match a real path separator:
+  `foo\/bar` matches `foo/bar`. Do not lose this behaviour by decomposition.
+- Classes support leading `!`/`^` negation, initial literal `]`, unsigned-byte
+  ranges, literal end `-`, escaped members and ASCII POSIX classes: alnum, alpha,
+  blank, cntrl, digit, graph, lower, print, punct, space, upper, xdigit. A class
+  never consumes `/`. A slash inside `a[b/c]d` is class content, not a component
+  split: `abd` and `acd` match, `a/d` does not. Reversed ranges add no range members;
+  interactions/folding require regression tests, with regression coverage.
+- A pattern with no slash applies to basenames at any depth below its scope.
+  A leading or contained slash anchors relative to scope. The raw presence of a
+  slash inside a class or escape still distinguishes a path pattern from a basename
+  pattern. Source rules do not apply to ancestors/siblings or their bare containing
+  directory; a slash-form endpoint can have an empty relative basename and consult
+  that directory's own source (see the isolated fixture). Do not collapse bare and
+  slash-form candidates into a universal strict-scope assertion.
+- The first excluded strict ancestor's **bare-directory** decision blocks all
+  descendants. A deeper negation cannot reopen it and sources below it do not
+  contribute. Report that ancestor/rule with NoMatch and nil endpoint rule.
+  Slash-form exclusion alone is not a traversal block: `a/**` can exclude `a/`
+  while `!a/keep` still includes the child; an own-source empty rule can exclude
+  `a/` without excluding `a/keep`. Never use a canonical slash-form Match result
+  as the sole future walker pruning test. The later walk API is outside this scope.
+- Canonical directory queries use a slash-suffixed endpoint with an empty final
+  basename; patterns such as `d/*`, `d/**` or empty basename rules can match `d/`.
+  Direct exclusion is Exclude with a rule, **not** a block naming the endpoint.
+  Preserve Git-observed winning provenance, not just the bool. The behavioural
+  rule is: with no strict ancestor block, a positive bare-directory self-decision
+  supplies direct Exclude and provenance. Otherwise use the slash-form endpoint's
+  winner, including applicable own-directory sources. A bare negation permits
+  traversal but is not automatically the slash endpoint's winner: `a/` then `!a/`
+  gives Include for bare `a`, but NoMatch for `a/`; `*` then `!*` gives Include
+  for both forms. `e/f` then `e/**` gives line 2 because the latter also matches
+  the bare descendant `e/f`. This states observable outcomes, not an engine's
+  control-flow prescription. The evaluator may compute them in any original way.
+- Directory-only rules never exclude a file endpoint. A positive bare-name rule
+  can exclude a directory and block descendants. A negation that wins at a parent
+  before it becomes excluded prevents that block.
+
+### Ordering and output
+
+Each matching rule has lexicographic key `(rank, scope-depth, source-sequence,
+physical-line)`. Greatest key wins. Source sequence is input-slice order, not label
+sorting; line orders within a single source. Standard global/info/command sources
+are root-scoped; custom scoped sources use scope depth within their fixed rank.
+Increasing depth never defeats a higher rank. A blocked path's winner is the block
+rule; no speculative endpoint history. Preserve source label, line, negation,
+directory-only flag and reconstructed verbose pattern even when not ignored.
+
+## Black-box corpus and oracle protocol
+
+`corpus.json` and `directory-cases.json` are a behavioural corpus, not
+a claim of exhaustive compatibility. Each case has a
+unique ID, explicit ignore files, one query and independently stated expected Git
+verdict/provenance. Cases are isolated, so a path is not simultaneously a file and
+directory. These cases are not copied upstream test tables. Their expected outputs
+are checked by executing Git in scratch repositories, never reading matcher code.
+Expand cases monotonically and record origin, exact version/build, platform and
+eligibility. The live oracle records its Git version and platform.
+Every case's origin is the file's project-authored origin plus that case's exact
+files/query/expected data. A `block` record is the library's strict-ancestor
+projection verified by additional bare-directory probes, not a Git output field.
+Absence of `block` means no strict ancestor block, not untested block metadata.
+For slash-form queries the expected library action is Exclude for a positive
+winning endpoint, Include for a negated winning endpoint, NoMatch for no winner;
+when blocked it is NoMatch with nil endpoint rule and the specified Block.
+NoSlash cases are oracle-only contrasts, not an additional public Match mode.
+
+`policy-cases.json` isolates **library-only** ordering from byte-pattern matching:
+rules have fixed rank/depth/source-sequence/line/action; candidates list the
+applicable matching rule IDs, ordered as strict ancestors then endpoint. Its
+expected action/rule/block is a specification assertion, not Git evidence.
+Rule IDs identify provenance; in blocked results the ID belongs to Block.Rule,
+not an endpoint rule. Regression tests must combine this policy with actual
+Source inputs and pattern matching; the supplied abstraction tests precedence,
+not parser correctness.
+
+External Git oracle protocol:
+create an isolated untracked scratch repo, materialise files/directories faithfully,
+configure excludes/case explicitly, suppress inherited Git/home/XDG/template config,
+then, in fresh processes **for each distinct query**, run
+`git check-ignore -z --stdin` for verdicts and
+`git check-ignore -v -z --stdin --non-matching` for winning provenance. Use
+NUL-terminated exact query arguments. Fresh processes are a conservative reproducible
+protocol, not evidence of an established batching defect. Any future batching
+optimisation must independently verify complete results and order invariance.
+Verbose records have four NUL fields:
+source, line, reconstructed pattern, query. Verbose negation output is **not** an
+ignored verdict; a positive winning empty pattern may have an empty pattern field.
+Exit 0/1 are normal; other exit codes or stderr errors require investigation.
+
+Pin Git ≥2.52 and record full build; do not assume other versions agree. Query
+identity includes case/fixture version, exact path bytes, dtype, slash form and case
+mode. Deduplicate identical semantic cases; report repeat execution separately.
+Every unique query has eligible result or explicit reasoned ineligibility. Missing,
+duplicate or unexpected records fail closed; compare provenance in both directions.
+Unmaterialised or wrong-dtype queries are not successful parity evidence. Keep legal
+POSIX names even if Windows cannot create them; rerun them where representable.
+Do not conflate slash/no-slash directory arguments or case-folding modes.
+
