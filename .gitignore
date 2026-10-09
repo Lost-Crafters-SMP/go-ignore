@@ -1,0 +1,18 @@
+# Test and coverage artifacts
+coverage.out
+coverage.html
+*.test
+*.test.exe
+
+# Profiling artifacts
+mem.out
+*.pprof
+
+# Local tool configuration
+mise.local.toml
+hk.local.pkl
+.config/hk.local.pkl
+
+# Local Go workspace (this repository is a standalone module)
+go.work
+go.work.sum
