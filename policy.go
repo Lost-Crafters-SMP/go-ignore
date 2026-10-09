@@ -61,13 +61,18 @@ type PolicyDecision struct {
 // reserved exclusions.
 func (d PolicyDecision) Ignored() bool { return d.Reserved || d.Decision.Ignored() }
 
-// dirPolicy is the cached state of one directory: the cumulative sources from
-// the root down to it, and the matcher compiled from them. Exactly one of
-// matcher and err is set; err is remembered so the Policy stays deterministic.
+// dirPolicy is the cached state of one directory: its own loaded sources
+// (kept only until compilation), the matcher compiled from them alone, and
+// the parent link used to compose queries across scopes. Ancestors are
+// loaded for their sources but never compiled on behalf of a descendant.
+// err is remembered so the Policy stays deterministic.
 type dirPolicy struct {
+	dir         string
+	parent      *dirPolicy
 	sources     []Source
 	matcher     *Matcher
 	diagnostics []Diagnostic
+	compiled    bool
 	err         error
 }
 
@@ -168,6 +173,9 @@ func (p *Policy) isReserved(rel string) bool {
 // Reserved paths are decided before any rule and cannot be negated. Source
 // discovery for the path's directory (and its ancestors) happens on first
 // use; discovery errors are returned and remain stable for the Policy.
+// Decisions compose the per-directory matchers along the scope chain under
+// the global (rank, depth, sequence, line) priority order, which is exactly
+// the order a cumulative compilation would produce.
 func (p *Policy) Match(rel string, isDir bool) (PolicyDecision, error) {
 	if err := validatePath(rel, false); err != nil {
 		return PolicyDecision{}, fmt.Errorf("path: %w", err)
@@ -183,11 +191,60 @@ func (p *Policy) Match(rel string, isDir bool) (PolicyDecision, error) {
 	if err != nil {
 		return PolicyDecision{}, err
 	}
-	decision, err := state.matcher.Match(rel, isDir)
-	if err != nil {
-		return PolicyDecision{}, err
+	var scratch evalScratch
+	for i := 0; i < len(rel); i++ {
+		if rel[i] == '/' {
+			if r := p.chainWinner(rel[:i], true, false, state, &scratch); r != nil && !r.negated {
+				return PolicyDecision{Decision: Decision{Block: &Block{Directory: rel[:i], Rule: r}}}, nil
+			}
+		}
 	}
-	return PolicyDecision{Decision: decision}, nil
+	r := p.chainWinner(rel, isDir, false, state, &scratch)
+	if isDir && (r == nil || r.negated) {
+		r = p.chainWinner(rel, true, true, state, &scratch)
+	}
+	if r == nil {
+		return PolicyDecision{}, nil
+	}
+	action := Exclude
+	if r.negated {
+		action = Include
+	}
+	return PolicyDecision{Decision: Decision{Action: action, Rule: r}}, nil
+}
+
+// chainWinner returns the highest-priority rule matching path across the
+// per-directory matchers from state up to the root, without recompiling
+// ancestor rules. Scopes that do not contain path are skipped. scratch is
+// reused across scopes exactly as a single matcher reuses it across rules.
+func (p *Policy) chainWinner(path string, isDir, slash bool, state *dirPolicy, scratch *evalScratch) *Rule {
+	var best *Rule
+	for s := state; s != nil; s = s.parent {
+		if s.dir != "" && !scopeEligible(path, s.dir, p.opts.CaseFold) {
+			continue
+		}
+		if r := s.matcher.winner(path, isDir, slash, scratch); r != nil && (best == nil || ruleOutranks(r, best)) {
+			best = r
+		}
+	}
+	return best
+}
+
+// ruleOutranks reports whether a has strictly higher matching priority than
+// b under the global (rank, depth, sequence, line) order. Rules from
+// different directories never tie, because depth differs; within one
+// directory the per-directory compilation already orders by the same key.
+func ruleOutranks(a, b *Rule) bool {
+	if a.rank != b.rank {
+		return a.rank > b.rank
+	}
+	if a.depth != b.depth {
+		return a.depth > b.depth
+	}
+	if a.sequence != b.sequence {
+		return a.sequence > b.sequence
+	}
+	return a.line > b.line
 }
 
 // MatchPath evaluates an absolute path against the policy. Containment is
@@ -240,39 +297,39 @@ func (p *Policy) Diagnostics() []Diagnostic {
 	return out
 }
 
-// matcherFor returns the cached cumulative policy of dir, loading it and its
-// ancestors on first use. dir is a clean root-relative slash directory ("" is
-// the root). Loads and compilation happen under the lock; compiled matchers
-// are immutable and shared afterwards.
+// matcherFor returns the cached state of dir with its own-source matcher
+// compiled, loading dir and its ancestors on first use. dir is a clean
+// root-relative slash directory ("" is the root). Loads and compilation
+// happen under the lock; compiled matchers are immutable and shared.
 func (p *Policy) matcherFor(dir string) (*dirPolicy, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	return p.dirLocked(dir)
+	return p.stateFor(dir)
 }
 
-// dirLocked builds or fetches the cumulative policy of one directory. The
-// caller holds p.mu.
-func (p *Policy) dirLocked(dir string) (*dirPolicy, error) {
+// stateFor loads the sources of dir (recursing into ancestors for their
+// sources only) and compiles dir's own matcher. The caller holds p.mu.
+func (p *Policy) stateFor(dir string) (*dirPolicy, error) {
 	if p.dirs == nil {
 		p.dirs = make(map[string]*dirPolicy)
 	}
 	if state, ok := p.dirs[dir]; ok {
-		return state, state.err
+		return state, p.compileLocked(state)
 	}
-	sources := []Source{}
+	state := &dirPolicy{dir: dir}
 	if dir != "" {
 		at := strings.LastIndexByte(dir, '/')
 		parentDir := ""
 		if at >= 0 {
 			parentDir = dir[:at]
 		}
-		parent, err := p.dirLocked(parentDir)
+		parent, err := p.stateFor(parentDir)
 		if err != nil {
-			state := &dirPolicy{err: err}
+			state.err = err
 			p.dirs[dir] = state
 			return state, state.err
 		}
-		sources = slices.Clone(parent.sources)
+		state.parent = parent
 	}
 	for _, spec := range p.specs {
 		if dir != "" && !spec.Nested {
@@ -288,27 +345,48 @@ func (p *Policy) dirLocked(dir string) (*dirPolicy, error) {
 				continue
 			}
 			err = fmt.Errorf("read %s: %w", sourceLabel(dir, spec.Filename), err)
-			state := &dirPolicy{err: err}
+			state.err = err
 			p.dirs[dir] = state
 			return state, state.err
 		}
-		sources = append(sources, Source{
+		if slices.Contains(data, 0) {
+			// Malformed sources surface at load time so descendant queries
+			// fail deterministically, exactly as they did when every
+			// directory recompiled its ancestors.
+			state.err = fmt.Errorf("compile %s: NUL in source: %w", sourceLabel(dir, spec.Filename), ErrInvalidInput)
+			p.dirs[dir] = state
+			return state, state.err
+		}
+		state.sources = append(state.sources, Source{
 			Label: sourceLabel(dir, spec.Filename),
 			Scope: dir,
 			Rank:  spec.Rank,
 			Data:  data,
 		})
 	}
-	matcher, diagnostics, err := Compile(sources, p.opts)
-	if err != nil {
-		err = fmt.Errorf("compile %s: %w", dir, err)
-		state := &dirPolicy{err: err}
-		p.dirs[dir] = state
-		return state, state.err
-	}
-	state := &dirPolicy{sources: sources, matcher: matcher, diagnostics: diagnostics}
 	p.dirs[dir] = state
-	return state, nil
+	return state, p.compileLocked(state)
+}
+
+// compileLocked compiles state's own-source matcher once and releases the
+// loaded bytes. The caller holds p.mu.
+func (p *Policy) compileLocked(state *dirPolicy) error {
+	if state.compiled {
+		return state.err
+	}
+	state.compiled = true
+	if state.err != nil {
+		return state.err
+	}
+	matcher, diagnostics, err := Compile(state.sources, p.opts)
+	state.sources = nil // the matcher owns its bytes
+	if err != nil {
+		state.err = fmt.Errorf("compile %s: %w", state.dir, err)
+		return state.err
+	}
+	state.matcher = matcher
+	state.diagnostics = diagnostics
+	return nil
 }
 
 // sourceLabel identifies a source file root-relatively, so winning rules and

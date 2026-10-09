@@ -183,6 +183,93 @@ func validatePath(path string, root bool) error {
 	return nil
 }
 
+// ruleBatch is the number of Rule values allocated per chunk. Batching keeps
+// compilation allocations per source bounded by rule count / ruleBatch
+// instead of one allocation per rule, with stable pointers into each chunk.
+const ruleBatch = 256
+
+// ruleArena hands out Rule storage from chunks sized to the expected rule
+// count, so large compilations batch in ruleBatch chunks while per-directory
+// compilations allocate exactly what they need. Handed-out pointers stay
+// valid because chunks are never appended to after allocation.
+type ruleArena struct {
+	expected int
+	chunk    []Rule
+	used     int
+}
+
+func (a *ruleArena) next() *Rule {
+	if a.used == len(a.chunk) {
+		size := ruleBatch
+		if a.expected > 0 && a.expected < size {
+			size = a.expected
+		}
+		if size <= 0 {
+			size = 1
+		}
+		a.chunk = make([]Rule, size)
+		if a.expected > size {
+			a.expected -= size
+		} else {
+			a.expected = 0
+		}
+		a.used = 0
+	}
+	r := &a.chunk[a.used]
+	a.used++
+	return r
+}
+
+// instrArena places compiled programs in one growing backing store so rules
+// share a small number of allocations instead of one per program. Programs
+// are read-only after compilation; sub-slices carry no spare capacity. The
+// store is presized from the rule count, which is exact for literal-
+// dominated sources and bounds growth otherwise.
+type instrArena struct {
+	store   []instruction
+	scratch []instruction
+}
+
+func newInstrArena(expected int) instrArena {
+	return instrArena{store: make([]instruction, 0, expected)}
+}
+
+func (a *instrArena) add(prog []instruction) []instruction {
+	off := len(a.store)
+	a.store = append(a.store, prog...)
+	return a.store[off:len(a.store):len(a.store)]
+}
+
+// countRules counts the lines that produce rules, mirroring Compile's
+// filter exactly (BOM, CRLF, blank and comment lines), so the rule pointer
+// slice can be presized without a second copy of the source bytes.
+func countRules(data []byte) int {
+	if len(data) >= 3 && data[0] == 0xef && data[1] == 0xbb && data[2] == 0xbf {
+		data = data[3:]
+	}
+	n := 0
+	start := 0
+	consider := func(end int) {
+		raw := data[start:end]
+		if len(raw) > 0 && raw[len(raw)-1] == '\r' {
+			raw = raw[:len(raw)-1]
+		}
+		if len(raw) > 0 && raw[0] != '#' {
+			n++
+		}
+	}
+	for i, b := range data {
+		if b == '\n' {
+			consider(i)
+			start = i + 1
+		}
+	}
+	if start < len(data) {
+		consider(len(data))
+	}
+	return n
+}
+
 // Compile validates all inputs before compiling any source. Malformed rules are
 // retained as inert rules with diagnostics; oversized sources are wholly skipped.
 func Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error) {
@@ -201,7 +288,15 @@ func Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error) {
 			return nil, nil, fmt.Errorf("source %d NUL: %w", i, ErrInvalidInput)
 		}
 	}
-	m := &Matcher{fold: opts.CaseFold}
+	total := 0
+	for _, source := range sources {
+		if int64(len(source.Data)) <= capBytes {
+			total += countRules(source.Data)
+		}
+	}
+	m := &Matcher{fold: opts.CaseFold, rules: make([]*Rule, 0, total)}
+	rules := ruleArena{expected: total}
+	programs := newInstrArena(total)
 	for seq, source := range sources {
 		if int64(len(source.Data)) > capBytes {
 			m.diagnostics = append(m.diagnostics, Diagnostic{Source: source.Label, Kind: OversizeSource, Message: "source exceeds byte cap"})
@@ -216,7 +311,13 @@ func Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error) {
 				continue
 			}
 			text := trimSpaces(raw)
-			r := &Rule{source: source.Label, scope: source.Scope, raw: raw, line: line, rank: source.Rank, sequence: seq}
+			r := rules.next()
+			r.source = source.Label
+			r.scope = source.Scope
+			r.raw = raw
+			r.line = line
+			r.rank = source.Rank
+			r.sequence = seq
 			if source.Scope != "" {
 				r.depth = strings.Count(source.Scope, "/") + 1
 			}
@@ -231,11 +332,13 @@ func Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error) {
 			r.pattern = text
 			r.anchored = strings.Contains(text, "/")
 			text = strings.TrimPrefix(text, "/")
-			program, err := compilePattern(text, opts.CaseFold)
-			r.program = program
+			prog, err := compilePatternBuf(programs.scratch[:0], text, opts.CaseFold)
 			if err != nil {
 				r.invalid = true
 				m.diagnostics = append(m.diagnostics, Diagnostic{Source: source.Label, Line: line, Pattern: r.pattern, Kind: MalformedPattern, Message: err.Error()})
+			} else {
+				programs.scratch = prog
+				r.program = programs.add(prog)
 			}
 			m.rules = append(m.rules, r)
 		}

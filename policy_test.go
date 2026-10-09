@@ -175,6 +175,26 @@ func TestPolicyRankAndDepth(t *testing.T) {
 	if d := policyAction(t, p, "x", false); d.Action != Include || d.Rule.Source() != "second" {
 		t.Fatalf("spec order: %+v source %q", d.Decision, d.Rule.Source())
 	}
+
+	// A higher-ranked ancestor rule beats deeper lower-ranked rules: the
+	// composed winner must keep rank ahead of depth across scopes.
+	root = t.TempDir()
+	writeTree(t, root, map[string]string{
+		"rootcmd":       "*.log\n",
+		"sub/.gitign":   "!keep.log\n",
+		"sub/keep.log":  "",
+		"sub/plain.log": "",
+	})
+	p = testPolicy(t, root, []SourceSpec{
+		{Filename: "rootcmd", Rank: RankCommand, Optional: true},
+		{Filename: ".gitign", Rank: RankPerDirectory, Optional: true, Nested: true},
+	})
+	if d := policyAction(t, p, "sub/keep.log", false); d.Action != Exclude || d.Rule.Source() != "rootcmd" || d.Rule.Rank() != RankCommand {
+		t.Fatalf("ancestor rank over descendant depth: %+v source %q", d.Decision, d.Rule.Source())
+	}
+	if d := policyAction(t, p, "deep/er/plain.log", false); d.Action != Exclude || d.Rule.Source() != "rootcmd" {
+		t.Fatalf("ancestor rank applies at depth: %+v", d.Decision)
+	}
 }
 
 func TestPolicyNestedBlocking(t *testing.T) {
@@ -398,6 +418,14 @@ func TestPolicyDiagnostics(t *testing.T) {
 	diags = p.Diagnostics()
 	if len(diags) != 1 || diags[0].Kind != OversizeSource || diags[0].Source != "sub/.custom" {
 		t.Fatalf("oversize diagnostic: %+v", diags)
+	}
+
+	// Diagnostics are reported once per source file, not once per
+	// descendant directory that consults it: matching below sub must not
+	// duplicate sub's diagnostics (the cumulative design duplicated them).
+	policyAction(t, p, "sub/deep/f", false)
+	if diags = p.Diagnostics(); len(diags) != 1 || diags[0].Source != "sub/.custom" {
+		t.Fatalf("duplicated ancestor diagnostics: %+v", diags)
 	}
 }
 

@@ -25,7 +25,13 @@ type instruction struct {
 }
 
 func compilePattern(pattern string, fold bool) ([]instruction, error) {
-	var program []instruction
+	return compilePatternBuf(nil, pattern, fold)
+}
+
+// compilePatternBuf compiles into buf's storage, allowing callers to reuse
+// scratch across rules and place the finished program in shared arenas.
+func compilePatternBuf(buf []instruction, pattern string, fold bool) ([]instruction, error) {
+	program := buf[:0]
 	var text strings.Builder
 	flush := func() {
 		if text.Len() != 0 {

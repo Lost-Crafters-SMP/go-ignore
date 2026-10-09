@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -103,26 +104,48 @@ func BenchmarkPolicyMatch(b *testing.B) {
 	}
 }
 
-// BenchmarkPolicyDeepChain profiles cumulative matcher recompilation at
-// increasing nesting depths: each directory's matcher recompiles every
-// ancestor source, so cold discovery scales quadratically in depth. The
-// Raw benchmark records capture the measured cold-discovery scaling.
-func BenchmarkPolicyDeepChain(b *testing.B) {
-	for _, depth := range []int{8, 16, 32, 64, 128} {
-		b.Run(fmt.Sprintf("depth=%d/cold", depth), func(b *testing.B) {
-			root := b.TempDir()
-			dir := root
-			for range depth {
-				dir = filepath.Join(dir, "d")
-				if err := os.MkdirAll(dir, 0o755); err != nil {
-					b.Fatal(err)
-				}
-				if err := os.WriteFile(filepath.Join(dir, ".custom"), []byte("/lit-a\n*.gen\ncache/\n**/w*.gen\nsub-thing\n"), 0o644); err != nil {
-					b.Fatal(err)
-				}
+// deepChainOnce builds a 128-level chain, shared across benchmark
+// invocations: b.Loop re-executes the surrounding function while ramping,
+// so per-invocation setup would otherwise pollute allocs/op (this is how
+// the pre-optimisation "warm" numbers were contaminated).
+var deepChainOnce struct {
+	sync.Once
+	root string
+}
+
+func deepChainTree(b *testing.B) string {
+	b.Helper()
+	deepChainOnce.Do(func() {
+		root, err := os.MkdirTemp("", "ignore-deepchain-")
+		if err != nil {
+			b.Fatal(err)
+		}
+		dir := root
+		for range 128 {
+			dir = filepath.Join(dir, "d")
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				b.Fatal(err)
 			}
-			deepest := strings.Repeat("d/", depth) + "plain.txt"
-			specs := benchSpecs()
+			if err := os.WriteFile(filepath.Join(dir, ".custom"), []byte("/lit-a\n*.gen\ncache/\n**/w*.gen\nsub-thing\n"), 0o644); err != nil {
+				b.Fatal(err)
+			}
+		}
+		deepChainOnce.root = root
+	})
+	return deepChainOnce.root
+}
+
+// BenchmarkPolicyDeepChain measures cold discovery and warm matching over a
+// shared deep chain. Cold creates a fresh Policy per iteration (discovery
+// plus per-directory compilation); warm reuses one Policy after one load.
+// With per-directory matchers both scale linearly in depth; the former
+// cumulative design measured quadratic cold cost.
+func BenchmarkPolicyDeepChain(b *testing.B) {
+	root := deepChainTree(b)
+	for _, depth := range []int{8, 16, 32, 64, 128} {
+		deepest := strings.Repeat("d/", depth) + "plain.txt"
+		specs := benchSpecs()
+		b.Run(fmt.Sprintf("depth=%d/cold", depth), func(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
 			for b.Loop() {
@@ -135,32 +158,23 @@ func BenchmarkPolicyDeepChain(b *testing.B) {
 				}
 			}
 		})
-	}
-	b.Run("depth=128/warm", func(b *testing.B) {
-		root := b.TempDir()
-		dir := root
-		for range 128 {
-			dir = filepath.Join(dir, "d")
-			if err := os.MkdirAll(dir, 0o755); err != nil {
+		b.Run(fmt.Sprintf("depth=%d/warm", depth), func(b *testing.B) {
+			p, err := NewPolicy(PolicyOptions{Root: root, Sources: specs})
+			if err != nil {
 				b.Fatal(err)
 			}
-			if err := os.WriteFile(filepath.Join(dir, ".custom"), []byte("/lit-a\n*.gen\ncache/\n**/w*.gen\nsub-thing\n"), 0o644); err != nil {
-				b.Fatal(err)
-			}
-		}
-		p, err := NewPolicy(PolicyOptions{Root: root, Sources: benchSpecs()})
-		if err != nil {
-			b.Fatal(err)
-		}
-		deepest := strings.Repeat("d/", 128) + "plain.txt"
-		b.ReportAllocs()
-		b.ResetTimer()
-		for b.Loop() {
 			if _, err := p.Match(deepest, false); err != nil {
 				b.Fatal(err)
 			}
-		}
-	})
+			b.ReportAllocs()
+			b.ResetTimer()
+			for b.Loop() {
+				if _, err := p.Match(deepest, false); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
 }
 
 func BenchmarkPolicyWalk(b *testing.B) {

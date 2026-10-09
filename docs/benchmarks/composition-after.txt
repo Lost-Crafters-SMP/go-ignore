@@ -1,0 +1,121 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkPolicyMatch/cold-miss-16         	     967	    343622 ns/op	   19276 B/op	     128 allocs/op
+BenchmarkPolicyMatch/cold-miss-16         	    1050	    342018 ns/op	   19272 B/op	     128 allocs/op
+BenchmarkPolicyMatch/cold-miss-16         	    1086	    344433 ns/op	   19271 B/op	     128 allocs/op
+BenchmarkPolicyMatch/cold-miss-16         	     972	    350487 ns/op	   19270 B/op	     128 allocs/op
+BenchmarkPolicyMatch/cold-miss-16         	    1057	    335891 ns/op	   19271 B/op	     128 allocs/op
+BenchmarkPolicyMatch/cold-hit-16          	    1035	    341910 ns/op	   19272 B/op	     128 allocs/op
+BenchmarkPolicyMatch/cold-hit-16          	    1069	    340882 ns/op	   19271 B/op	     128 allocs/op
+BenchmarkPolicyMatch/cold-hit-16          	     964	    337704 ns/op	   19270 B/op	     128 allocs/op
+BenchmarkPolicyMatch/cold-hit-16          	     943	    399135 ns/op	   19271 B/op	     128 allocs/op
+BenchmarkPolicyMatch/cold-hit-16          	     964	    346839 ns/op	   19271 B/op	     128 allocs/op
+BenchmarkPolicyMatch/warm-miss-16         	  409905	       897.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-miss-16         	  376642	       929.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-miss-16         	  400502	       889.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-miss-16         	  414025	       864.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-miss-16         	  363826	       892.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-hit-16          	  328101	      1211 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-hit-16          	  323258	      1079 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-hit-16          	  311037	      1098 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-hit-16          	  344272	      1138 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-hit-16          	  337404	      1038 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-dir-16          	  414715	       873.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-dir-16          	  423499	       839.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-dir-16          	  361170	       862.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-dir-16          	  383218	       962.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyMatch/warm-dir-16          	  365142	       959.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=8/cold-16  	     543	    676560 ns/op	   36487 B/op	     224 allocs/op
+BenchmarkPolicyDeepChain/depth=8/cold-16  	     570	    612948 ns/op	   36486 B/op	     224 allocs/op
+BenchmarkPolicyDeepChain/depth=8/cold-16  	     565	    576323 ns/op	   36486 B/op	     224 allocs/op
+BenchmarkPolicyDeepChain/depth=8/cold-16  	     543	    578706 ns/op	   36487 B/op	     224 allocs/op
+BenchmarkPolicyDeepChain/depth=8/cold-16  	     573	    616005 ns/op	   36485 B/op	     224 allocs/op
+BenchmarkPolicyDeepChain/depth=8/warm-16  	  152355	      2588 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=8/warm-16  	  158751	      2338 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=8/warm-16  	  148316	      2287 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=8/warm-16  	  162651	      2255 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=8/warm-16  	  163035	      2414 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=16/cold-16 	     274	   1193265 ns/op	   72582 B/op	     434 allocs/op
+BenchmarkPolicyDeepChain/depth=16/cold-16 	     308	   1170706 ns/op	   72577 B/op	     434 allocs/op
+BenchmarkPolicyDeepChain/depth=16/cold-16 	     308	   1173173 ns/op	   72574 B/op	     434 allocs/op
+BenchmarkPolicyDeepChain/depth=16/cold-16 	     306	   1169017 ns/op	   72575 B/op	     434 allocs/op
+BenchmarkPolicyDeepChain/depth=16/cold-16 	     316	   1314948 ns/op	   72581 B/op	     434 allocs/op
+BenchmarkPolicyDeepChain/depth=16/warm-16 	   33907	     10979 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=16/warm-16 	   28053	     12393 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=16/warm-16 	   37053	      9995 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=16/warm-16 	   34624	     10427 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=16/warm-16 	   35104	     10046 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=32/cold-16 	     138	   2372899 ns/op	  148052 B/op	     871 allocs/op
+BenchmarkPolicyDeepChain/depth=32/cold-16 	     150	   2359090 ns/op	  148055 B/op	     871 allocs/op
+BenchmarkPolicyDeepChain/depth=32/cold-16 	     152	   2303518 ns/op	  148058 B/op	     871 allocs/op
+BenchmarkPolicyDeepChain/depth=32/cold-16 	     158	   2248089 ns/op	  148054 B/op	     871 allocs/op
+BenchmarkPolicyDeepChain/depth=32/cold-16 	     150	   2357507 ns/op	  148056 B/op	     871 allocs/op
+BenchmarkPolicyDeepChain/depth=32/warm-16 	    7196	     49696 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=32/warm-16 	    6453	     54865 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=32/warm-16 	    7549	     51558 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=32/warm-16 	    6950	     50594 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=32/warm-16 	    6642	     50421 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=64/cold-16 	      60	   5214975 ns/op	  311635 B/op	    1753 allocs/op
+BenchmarkPolicyDeepChain/depth=64/cold-16 	      75	   4766279 ns/op	  311611 B/op	    1753 allocs/op
+BenchmarkPolicyDeepChain/depth=64/cold-16 	      75	   4761921 ns/op	  311610 B/op	    1753 allocs/op
+BenchmarkPolicyDeepChain/depth=64/cold-16 	      62	   5018608 ns/op	  311624 B/op	    1753 allocs/op
+BenchmarkPolicyDeepChain/depth=64/cold-16 	      75	   4801803 ns/op	  311612 B/op	    1753 allocs/op
+BenchmarkPolicyDeepChain/depth=64/warm-16 	    1304	    288825 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=64/warm-16 	    1260	    300786 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=64/warm-16 	    1285	    306807 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=64/warm-16 	    1256	    281811 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=64/warm-16 	    1297	    284178 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=128/cold-16         	      27	  12840444 ns/op	  677736 B/op	    3507 allocs/op
+BenchmarkPolicyDeepChain/depth=128/cold-16         	      28	  11899950 ns/op	  677723 B/op	    3508 allocs/op
+BenchmarkPolicyDeepChain/depth=128/cold-16         	      30	  11659457 ns/op	  677745 B/op	    3507 allocs/op
+BenchmarkPolicyDeepChain/depth=128/cold-16         	      31	  11567516 ns/op	  677731 B/op	    3507 allocs/op
+BenchmarkPolicyDeepChain/depth=128/cold-16         	      32	  11547769 ns/op	  677708 B/op	    3507 allocs/op
+BenchmarkPolicyDeepChain/depth=128/warm-16         	     189	   1821498 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=128/warm-16         	     204	   1790586 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=128/warm-16         	     206	   1791173 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=128/warm-16         	     166	   2001856 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=128/warm-16         	     196	   1817653 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyWalk/discover-16                    	      14	  22753579 ns/op	  773647 B/op	    6769 allocs/op
+BenchmarkPolicyWalk/discover-16                    	      19	  18585074 ns/op	  761469 B/op	    6768 allocs/op
+BenchmarkPolicyWalk/discover-16                    	      19	  18389426 ns/op	  761440 B/op	    6768 allocs/op
+BenchmarkPolicyWalk/discover-16                    	      19	  18446032 ns/op	  754554 B/op	    6768 allocs/op
+BenchmarkPolicyWalk/discover-16                    	      19	  18760316 ns/op	  758015 B/op	    6768 allocs/op
+BenchmarkPolicyWalk/cached-16                      	      37	   9280473 ns/op	  291036 B/op	    3822 allocs/op
+BenchmarkPolicyWalk/cached-16                      	      36	   9562744 ns/op	  298835 B/op	    3824 allocs/op
+BenchmarkPolicyWalk/cached-16                      	      36	   9646033 ns/op	  300654 B/op	    3824 allocs/op
+BenchmarkPolicyWalk/cached-16                      	      36	   9646647 ns/op	  291544 B/op	    3824 allocs/op
+BenchmarkPolicyWalk/cached-16                      	      32	  10410978 ns/op	  297981 B/op	    3835 allocs/op
+BenchmarkCompile/1000-16                           	    2730	    171658 ns/op	  75.09 MB/s	  322452 B/op	      17 allocs/op
+BenchmarkCompile/1000-16                           	    2914	    174281 ns/op	  73.96 MB/s	  322448 B/op	      17 allocs/op
+BenchmarkCompile/1000-16                           	    2140	    167954 ns/op	  76.75 MB/s	  322448 B/op	      17 allocs/op
+BenchmarkCompile/1000-16                           	    2889	    195332 ns/op	  65.99 MB/s	  322449 B/op	      17 allocs/op
+BenchmarkCompile/1000-16                           	    2385	    184278 ns/op	  69.95 MB/s	  322449 B/op	      17 allocs/op
+BenchmarkCompile/10000-16                          	     177	   1936090 ns/op	  71.74 MB/s	 3143621 B/op	      81 allocs/op
+BenchmarkCompile/10000-16                          	     181	   1913844 ns/op	  72.57 MB/s	 3143693 B/op	      81 allocs/op
+BenchmarkCompile/10000-16                          	     178	   2263728 ns/op	  61.35 MB/s	 3143691 B/op	      81 allocs/op
+BenchmarkCompile/10000-16                          	     165	   1983790 ns/op	  70.01 MB/s	 3143660 B/op	      81 allocs/op
+BenchmarkCompile/10000-16                          	     163	   2234367 ns/op	  62.16 MB/s	 3143683 B/op	      81 allocs/op
+BenchmarkMatch/rules=100/depth=2/miss-16           	 5850499	        63.57 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=100/depth=2/miss-16           	 7059334	        50.91 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=100/depth=2/miss-16           	 6084513	        61.07 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=100/depth=2/miss-16           	 6447175	        53.72 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=100/depth=2/miss-16           	 6480997	        55.65 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=1000/depth=2/miss-16          	 6642458	        56.29 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=1000/depth=2/miss-16          	 6371973	        57.60 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=1000/depth=2/miss-16          	 6876448	        52.95 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=1000/depth=2/miss-16          	 6632948	        55.53 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=1000/depth=2/miss-16          	 6544585	        60.27 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=2/miss-16         	 6629870	        54.10 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=2/miss-16         	 5949507	        57.53 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=2/miss-16         	 6615676	        54.76 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=2/miss-16         	 5808690	        57.55 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=2/miss-16         	 6502561	        59.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/miss-16       	   19070	     19149 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/miss-16       	   18358	     19618 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/miss-16       	   19000	     19014 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/miss-16       	   18825	     19063 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/rules=10000/depth=512/miss-16       	   18229	     20434 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	go.lostcrafters.com/ignore	42.502s
