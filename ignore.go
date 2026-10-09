@@ -99,11 +99,14 @@ func (e litEntry) pick(isDir bool) int32 {
 // scopeGroup indexes the exact-match literal rules of one source scope. Rules
 // anchored to the scope are keyed by their scope-relative path; bare-name rules
 // are keyed by the candidate basename, which is scope-independent.
+// anchoredMin/Max bound the byte lengths of the anchored keys so lookups for
+// paths outside the range are skipped without hashing.
 type scopeGroup struct {
-	scope    string
-	strip    int // len(scope)+1, or 0 for the root scope
-	anchored map[string]litEntry
-	base     map[string]litEntry
+	scope                    string
+	strip                    int // len(scope)+1, or 0 for the root scope
+	anchoredMin, anchoredMax int // inverted range when the map is empty
+	anchored                 map[string]litEntry
+	base                     map[string]litEntry
 }
 
 // eligible reports whether a non-slash candidate path lies inside the scope.
@@ -484,6 +487,18 @@ func (m *Matcher) buildIndex() {
 		}
 		index[key] = entry
 	}
+	for gi := range m.scopes {
+		g := &m.scopes[gi]
+		g.anchoredMin, g.anchoredMax = 1, 0
+		for key := range g.anchored {
+			if len(key) < g.anchoredMin {
+				g.anchoredMin = len(key)
+			}
+			if len(key) > g.anchoredMax {
+				g.anchoredMax = len(key)
+			}
+		}
+	}
 }
 
 // literalBounds returns the literal runs a wildcard program starts and ends
@@ -595,22 +610,37 @@ func (m *Matcher) winner(path string, isDir, slash bool, scratch *evalScratch) *
 		return m.scanWinner(path, isDir, true, scratch)
 	}
 	at := strings.LastIndexByte(path, '/')
-	base := path[at+1:]
+	return m.bareWinner(path, path[at+1:], isDir, scratch, false)
+}
+
+// bareWinner is the non-slash winner with the candidate basename precomputed
+// and optional structural eligibility: when allEligible is set, every scope
+// group is known to contain path (the policy layer establishes this from the
+// scope chain), so per-group byte comparisons are skipped.
+func (m *Matcher) bareWinner(path, base string, isDir bool, scratch *evalScratch, allEligible bool) *Rule {
+	if scratch == nil {
+		scratch = new(evalScratch)
+	}
 	best := int32(idxNone)
 	var bestRule *Rule
 	buf := scratch.fold[:0]
-	elig := scratch.eligibility(len(m.scopes))
+	var elig []bool
+	if !allEligible {
+		elig = scratch.eligibility(len(m.scopes))
+	}
 	for gi := range m.scopes {
 		g := &m.scopes[gi]
-		ok := g.eligible(path, m.fold)
-		elig[gi] = ok
-		if !ok {
-			continue
+		if !allEligible {
+			ok := g.eligible(path, m.fold)
+			elig[gi] = ok
+			if !ok {
+				continue
+			}
 		}
-		var entry litEntry
-		var hit bool
-		if len(g.anchored) > 0 {
-			entry, hit, buf = lookupLiteral(g.anchored, path[g.strip:], m.fold, buf)
+		rel := path[g.strip:]
+		if len(g.anchored) > 0 && len(rel) >= g.anchoredMin && len(rel) <= g.anchoredMax {
+			entry, hit, newBuf := lookupLiteral(g.anchored, rel, m.fold, buf)
+			buf = newBuf
 			if hit {
 				if idx := entry.pick(isDir); idx > best {
 					best, bestRule = idx, m.rules[idx]
@@ -618,7 +648,8 @@ func (m *Matcher) winner(path string, isDir, slash bool, scratch *evalScratch) *
 			}
 		}
 		if len(g.base) > 0 {
-			entry, hit, buf = lookupLiteral(g.base, base, m.fold, buf)
+			entry, hit, newBuf := lookupLiteral(g.base, base, m.fold, buf)
+			buf = newBuf
 			if hit {
 				if idx := entry.pick(isDir); idx > best {
 					best, bestRule = idx, m.rules[idx]
@@ -635,7 +666,7 @@ func (m *Matcher) winner(path string, isDir, slash bool, scratch *evalScratch) *
 		if r.dirOnly && !isDir {
 			continue
 		}
-		if !elig[r.scopeID] {
+		if !allEligible && !elig[r.scopeID] {
 			continue
 		}
 		rel := path

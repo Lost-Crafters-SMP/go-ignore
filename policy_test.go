@@ -831,3 +831,122 @@ func TestPolicyModelEquivalence(t *testing.T) {
 		}
 	}
 }
+
+// TestPolicyBlockScanEquivalence differentially checks the composed
+// ancestor-blocking scan and directory endpoints against independently
+// compiled cumulative matchers, including block presence, directory,
+// provenance, negated prefix winners and rank-over-depth conflicts.
+func TestPolicyBlockScanEquivalence(t *testing.T) {
+	root := t.TempDir()
+	files := map[string]string{
+		".root":           "build/\n*.log\n!keep.log\nb/\n!reopen/\n",
+		"a/.nest":         "!special.log\ndeep/\n",
+		"a/b/.nest":       "deeper/\n!x.log\nleaf/\n",
+		"a/b/c/.nest":     "*.log\n!final.log\n",
+		"cmd":             "!x.log\n!reopen/\n",
+		"a/reopen/x":      "",
+		"a/b/leaf/f":      "",
+		"a/b/deeper/g":    "",
+		"a/deep/h":        "",
+		"build/out/o":     "",
+		"a/b/c/final.log": "",
+	}
+	writeTree(t, root, files)
+	specs := []SourceSpec{
+		{Filename: "cmd", Rank: RankCommand, Optional: true},
+		{Filename: ".root", Rank: RankPerDirectory, Optional: true},
+		{Filename: ".nest", Rank: RankPerDirectory, Optional: true, Nested: true},
+	}
+	p := testPolicy(t, root, specs)
+
+	// Model: cumulative sources per queried directory, built in the same
+	// order the policy assigns sequences (root-only specs, then the nested
+	// source at each chain level), reading files only where they exist.
+	modelDir := func(dir string) *Matcher {
+		cmdData, err := os.ReadFile(filepath.Join(root, "cmd"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		rootData, err := os.ReadFile(filepath.Join(root, ".root"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		sources := []Source{
+			{Label: "cmd", Rank: RankCommand, Data: cmdData},
+			{Label: ".root", Data: rootData},
+		}
+		if dir != "" {
+			scope := ""
+			for _, part := range strings.Split(dir, "/") {
+				if scope == "" {
+					scope = part
+				} else {
+					scope += "/" + part
+				}
+				full := filepath.Join(root, filepath.FromSlash(scope), ".nest")
+				if raw, err := os.ReadFile(full); err == nil {
+					sources = append(sources, Source{Label: scope + "/.nest", Scope: scope, Data: raw})
+				} else if !errors.Is(err, os.ErrNotExist) {
+					t.Fatal(err)
+				}
+			}
+		}
+		m, _, err := Compile(sources, Options{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return m
+	}
+
+	paths := []string{
+		"keep.log", "x.log", "reopen", "b", "b/inner", "build/out/o", "build",
+		"a/special.log", "a/x.log", "a/other.log", "a/keep.log",
+		"a/deep/h", "a/deep", "a/reopen/x", "a/reopen",
+		"a/b/x.log", "a/b/keep.log", "a/b/leaf/f", "a/b/leaf", "a/b/deeper/g", "a/b/deeper",
+		"a/b/c/final.log", "a/b/c/plain.log", "a/b/c/keep.log", "a/b/c",
+	}
+	for _, path := range paths {
+		for _, isDir := range []bool{false, true} {
+			want, err := modelDir(dirOf(path)).Match(path, isDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := p.Match(path, isDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.Action != want.Action || got.Ignored() != want.Ignored() {
+				t.Fatalf("path=%q dir=%v: policy=%+v model=%+v", path, isDir, got.Decision, want)
+			}
+			if (got.Block == nil) != (want.Block == nil) {
+				t.Fatalf("path=%q dir=%v: block %+v vs %+v", path, isDir, got.Block, want.Block)
+			}
+			if got.Block != nil {
+				if got.Block.Directory != want.Block.Directory {
+					t.Fatalf("path=%q dir=%v: block dir %q vs %q", path, isDir, got.Block.Directory, want.Block.Directory)
+				}
+				if verboseRule(got.Block.Rule) != verboseRule(want.Block.Rule) || got.Block.Rule.Source() != want.Block.Rule.Source() || got.Block.Rule.Line() != want.Block.Rule.Line() {
+					t.Fatalf("path=%q dir=%v: block rule %s:%d:%q vs %s:%d:%q", path, isDir,
+						got.Block.Rule.Source(), got.Block.Rule.Line(), verboseRule(got.Block.Rule),
+						want.Block.Rule.Source(), want.Block.Rule.Line(), verboseRule(want.Block.Rule))
+				}
+			}
+			if (got.Rule == nil) != (want.Rule == nil) {
+				t.Fatalf("path=%q dir=%v: rule %+v vs %+v", path, isDir, got.Rule, want.Rule)
+			}
+			if got.Rule != nil && (got.Rule.Source() != want.Rule.Source() || got.Rule.Line() != want.Rule.Line() || verboseRule(got.Rule) != verboseRule(want.Rule)) {
+				t.Fatalf("path=%q dir=%v: rule %s:%d:%q vs %s:%d:%q", path, isDir,
+					got.Rule.Source(), got.Rule.Line(), verboseRule(got.Rule),
+					want.Rule.Source(), want.Rule.Line(), verboseRule(want.Rule))
+			}
+		}
+	}
+}
+
+// dirOf returns the slash-relative parent directory of a clean path.
+func dirOf(path string) string {
+	if at := strings.LastIndexByte(path, '/'); at >= 0 {
+		return path[:at]
+	}
+	return ""
+}

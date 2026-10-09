@@ -63,12 +63,14 @@ func (d PolicyDecision) Ignored() bool { return d.Reserved || d.Decision.Ignored
 
 // dirPolicy is the cached state of one directory: its own loaded sources
 // (kept only until compilation), the matcher compiled from them alone, and
-// the parent link used to compose queries across scopes. Ancestors are
-// loaded for their sources but never compiled on behalf of a descendant.
+// the parent link used to compose queries across scopes. depth is the
+// component count of dir (root is 0), giving structural scope eligibility:
+// the chain is built from the query path, so byte comparisons are redundant.
 // err is remembered so the Policy stays deterministic.
 type dirPolicy struct {
 	dir         string
 	parent      *dirPolicy
+	depth       int
 	sources     []Source
 	matcher     *Matcher
 	diagnostics []Diagnostic
@@ -175,7 +177,9 @@ func (p *Policy) isReserved(rel string) bool {
 // use; discovery errors are returned and remain stable for the Policy.
 // Decisions compose the per-directory matchers along the scope chain under
 // the global (rank, depth, sequence, line) priority order, which is exactly
-// the order a cumulative compilation would produce.
+// the order a cumulative compilation would produce. Scope eligibility is
+// structural — every chain scope is a prefix directory of the query — so
+// the ancestor-blocking scan compares depths, not bytes.
 func (p *Policy) Match(rel string, isDir bool) (PolicyDecision, error) {
 	if err := validatePath(rel, false); err != nil {
 		return PolicyDecision{}, fmt.Errorf("path: %w", err)
@@ -192,16 +196,51 @@ func (p *Policy) Match(rel string, isDir bool) (PolicyDecision, error) {
 		return PolicyDecision{}, err
 	}
 	var scratch evalScratch
-	for i := 0; i < len(rel); i++ {
-		if rel[i] == '/' {
-			if r := p.chainWinner(rel[:i], true, false, state, &scratch); r != nil && !r.negated {
-				return PolicyDecision{Decision: Decision{Block: &Block{Directory: rel[:i], Rule: r}}}, nil
+	// Ancestor blocking: prefixes ascend, and the first prefix whose
+	// winning rule is an exclusion blocks. A chain scope applies to a
+	// prefix exactly when its depth is below the prefix's component count.
+	start := 0
+	for j := 0; ; j++ {
+		at := strings.IndexByte(rel[start:], '/')
+		if at < 0 {
+			break
+		}
+		at += start
+		prefix := rel[:at]
+		base := rel[start:at]
+		var best *Rule
+		for s := state; s != nil; s = s.parent {
+			if s.depth >= j+1 {
+				continue
+			}
+			if r := s.matcher.bareWinner(prefix, base, true, &scratch, true); r != nil && (best == nil || ruleOutranks(r, best)) {
+				best = r
 			}
 		}
+		if best != nil && !best.negated {
+			return PolicyDecision{Decision: Decision{Block: &Block{Directory: prefix, Rule: best}}}, nil
+		}
+		start = at + 1
 	}
-	r := p.chainWinner(rel, isDir, false, state, &scratch)
+	// Endpoint: every chain scope contains rel, so eligibility is known.
+	base := rel
+	if start > 0 {
+		base = rel[start:]
+	}
+	var r *Rule
+	for s := state; s != nil; s = s.parent {
+		if cand := s.matcher.bareWinner(rel, base, isDir, &scratch, true); cand != nil && (r == nil || ruleOutranks(cand, r)) {
+			r = cand
+		}
+	}
 	if isDir && (r == nil || r.negated) {
-		r = p.chainWinner(rel, true, true, state, &scratch)
+		// The canonical slash-form evaluation replaces the bare result.
+		r = nil
+		for s := state; s != nil; s = s.parent {
+			if cand := s.matcher.scanWinner(rel, true, true, &scratch); cand != nil && (r == nil || ruleOutranks(cand, r)) {
+				r = cand
+			}
+		}
 	}
 	if r == nil {
 		return PolicyDecision{}, nil
@@ -211,23 +250,6 @@ func (p *Policy) Match(rel string, isDir bool) (PolicyDecision, error) {
 		action = Include
 	}
 	return PolicyDecision{Decision: Decision{Action: action, Rule: r}}, nil
-}
-
-// chainWinner returns the highest-priority rule matching path across the
-// per-directory matchers from state up to the root, without recompiling
-// ancestor rules. Scopes that do not contain path are skipped. scratch is
-// reused across scopes exactly as a single matcher reuses it across rules.
-func (p *Policy) chainWinner(path string, isDir, slash bool, state *dirPolicy, scratch *evalScratch) *Rule {
-	var best *Rule
-	for s := state; s != nil; s = s.parent {
-		if s.dir != "" && !scopeEligible(path, s.dir, p.opts.CaseFold) {
-			continue
-		}
-		if r := s.matcher.winner(path, isDir, slash, scratch); r != nil && (best == nil || ruleOutranks(r, best)) {
-			best = r
-		}
-	}
-	return best
 }
 
 // ruleOutranks reports whether a has strictly higher matching priority than
@@ -330,6 +352,7 @@ func (p *Policy) stateFor(dir string) (*dirPolicy, error) {
 			return state, state.err
 		}
 		state.parent = parent
+		state.depth = parent.depth + 1
 	}
 	for _, spec := range p.specs {
 		if dir != "" && !spec.Nested {

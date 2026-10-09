@@ -1,0 +1,56 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkPolicyDeepChain/depth=8/cold-16         	     543	    601147 ns/op	   36620 B/op	     224 allocs/op
+BenchmarkPolicyDeepChain/depth=8/cold-16         	     604	    591400 ns/op	   36612 B/op	     224 allocs/op
+BenchmarkPolicyDeepChain/depth=8/cold-16         	     583	    639019 ns/op	   36612 B/op	     224 allocs/op
+BenchmarkPolicyDeepChain/depth=8/cold-16         	     618	    602687 ns/op	   36611 B/op	     224 allocs/op
+BenchmarkPolicyDeepChain/depth=8/cold-16         	     600	    601282 ns/op	   36612 B/op	     224 allocs/op
+BenchmarkPolicyDeepChain/depth=8/warm-16         	  256682	      1414 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=8/warm-16         	  253887	      1433 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=8/warm-16         	  251894	      1424 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=8/warm-16         	  245030	      1978 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=8/warm-16         	  263796	      1423 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=16/cold-16        	     278	   1186434 ns/op	   72838 B/op	     434 allocs/op
+BenchmarkPolicyDeepChain/depth=16/cold-16        	     295	   1206186 ns/op	   72832 B/op	     434 allocs/op
+BenchmarkPolicyDeepChain/depth=16/cold-16        	     304	   1169983 ns/op	   72831 B/op	     434 allocs/op
+BenchmarkPolicyDeepChain/depth=16/cold-16        	     308	   1168701 ns/op	   72831 B/op	     434 allocs/op
+BenchmarkPolicyDeepChain/depth=16/cold-16        	     264	   1238988 ns/op	   72830 B/op	     434 allocs/op
+BenchmarkPolicyDeepChain/depth=16/warm-16        	   68506	      4726 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=16/warm-16        	   79754	      4498 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=16/warm-16        	   73580	      4694 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=16/warm-16        	   82569	      4572 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=16/warm-16        	   75146	      4519 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=32/cold-16        	     136	   2524197 ns/op	  148311 B/op	     870 allocs/op
+BenchmarkPolicyDeepChain/depth=32/cold-16        	     145	   2473252 ns/op	  148302 B/op	     870 allocs/op
+BenchmarkPolicyDeepChain/depth=32/cold-16        	     150	   2399180 ns/op	  148296 B/op	     870 allocs/op
+BenchmarkPolicyDeepChain/depth=32/cold-16        	     129	   2703143 ns/op	  148300 B/op	     870 allocs/op
+BenchmarkPolicyDeepChain/depth=32/cold-16        	     140	   2506923 ns/op	  148305 B/op	     870 allocs/op
+BenchmarkPolicyDeepChain/depth=32/warm-16        	   22227	     16467 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=32/warm-16        	   22502	     16680 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=32/warm-16        	   21895	     16136 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=32/warm-16        	   23270	     15716 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=32/warm-16        	   21127	     17167 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=64/cold-16        	      60	   5688450 ns/op	  312209 B/op	    1752 allocs/op
+BenchmarkPolicyDeepChain/depth=64/cold-16        	      73	   5212848 ns/op	  312202 B/op	    1752 allocs/op
+BenchmarkPolicyDeepChain/depth=64/cold-16        	      74	   4812657 ns/op	  312192 B/op	    1752 allocs/op
+BenchmarkPolicyDeepChain/depth=64/cold-16        	      74	   4710191 ns/op	  312185 B/op	    1752 allocs/op
+BenchmarkPolicyDeepChain/depth=64/cold-16        	      73	   4858855 ns/op	  312200 B/op	    1752 allocs/op
+BenchmarkPolicyDeepChain/depth=64/warm-16        	    5119	     60747 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=64/warm-16        	    6463	     61825 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=64/warm-16        	    6082	     58886 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=64/warm-16        	    6384	     59650 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=64/warm-16        	    6222	     58236 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=128/cold-16       	      28	  11849432 ns/op	  678930 B/op	    3506 allocs/op
+BenchmarkPolicyDeepChain/depth=128/cold-16       	      33	  10250867 ns/op	  678913 B/op	    3506 allocs/op
+BenchmarkPolicyDeepChain/depth=128/cold-16       	      36	  10638356 ns/op	  678936 B/op	    3506 allocs/op
+BenchmarkPolicyDeepChain/depth=128/cold-16       	      34	  10099665 ns/op	  678966 B/op	    3506 allocs/op
+BenchmarkPolicyDeepChain/depth=128/cold-16       	      36	  10179856 ns/op	  678941 B/op	    3506 allocs/op
+BenchmarkPolicyDeepChain/depth=128/warm-16       	    1567	    234196 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=128/warm-16       	    1603	    227045 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=128/warm-16       	    1330	    261219 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=128/warm-16       	    1594	    233502 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPolicyDeepChain/depth=128/warm-16       	    1563	    228270 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	go.lostcrafters.com/ignore	18.263s
