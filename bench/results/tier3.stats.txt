@@ -1,0 +1,65 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+                                                                 │ results\tier3.txt │
+                                                                 │      sec/op       │
+Tier3MatcherVsPolicy/tree=nested-d8/engine=cumulative-matcher-16        1.354µ ±  6%
+Tier3MatcherVsPolicy/tree=nested-d8/engine=composed-policy-16           893.1n ±  5%
+Tier3MatcherVsPolicy/tree=moby/engine=cumulative-matcher-16             8.119µ ±  2%
+Tier3MatcherVsPolicy/tree=moby/engine=composed-policy-16                947.2n ±  3%
+Tier3SingleVsComposed/tree=pair-single-16                               414.4n ±  3%
+Tier3SingleVsComposed/tree=pair-nested-16                               803.5n ±  2%
+Tier3Ranks/ranks=standard-16                                            905.9n ±  3%
+Tier3Ranks/ranks=custom-16                                              913.8n ±  4%
+Tier3Reserved/reserved-on-16                                            963.4n ±  5%
+Tier3Reserved/reserved-off-16                                           886.8n ±  2%
+Tier3Depth/tree=nested-d2-16                                            293.0n ± 10%
+Tier3Depth/tree=nested-d8-16                                            901.1n ± 11%
+Tier3Depth/tree=nested-d32-16                                           6.234µ ±  2%
+Tier3DecisionWorkload/workload=ancestor-blocked-16                      970.3n ±  2%
+Tier3DecisionWorkload/workload=endpoint-decided-16                      1.043µ ±  3%
+Tier3DecisionWorkload/workload=clean-miss-16                            867.5n ±  3%
+geomean                                                                 1.075µ
+
+                                                                 │ results\tier3.txt │
+                                                                 │       B/op        │
+Tier3MatcherVsPolicy/tree=nested-d8/engine=cumulative-matcher-16        3.000 ± 0%
+Tier3MatcherVsPolicy/tree=nested-d8/engine=composed-policy-16           3.000 ± 0%
+Tier3MatcherVsPolicy/tree=moby/engine=cumulative-matcher-16             112.0 ± 0%
+Tier3MatcherVsPolicy/tree=moby/engine=composed-policy-16                0.000 ± 0%
+Tier3SingleVsComposed/tree=pair-single-16                               2.000 ± 0%
+Tier3SingleVsComposed/tree=pair-nested-16                               2.000 ± 0%
+Tier3Ranks/ranks=standard-16                                            3.000 ± 0%
+Tier3Ranks/ranks=custom-16                                              3.000 ± 0%
+Tier3Reserved/reserved-on-16                                            0.000 ± 0%
+Tier3Reserved/reserved-off-16                                           0.000 ± 0%
+Tier3Depth/tree=nested-d2-16                                            3.000 ± 0%
+Tier3Depth/tree=nested-d8-16                                            3.000 ± 0%
+Tier3Depth/tree=nested-d32-16                                           4.000 ± 0%
+Tier3DecisionWorkload/workload=ancestor-blocked-16                      24.00 ± 0%
+Tier3DecisionWorkload/workload=endpoint-decided-16                      0.000 ± 0%
+Tier3DecisionWorkload/workload=clean-miss-16                            0.000 ± 0%
+geomean                                                                            ¹
+¹ summaries must be >0 to compute geomean
+
+                                                                 │ results\tier3.txt │
+                                                                 │     allocs/op     │
+Tier3MatcherVsPolicy/tree=nested-d8/engine=cumulative-matcher-16        0.000 ± 0%
+Tier3MatcherVsPolicy/tree=nested-d8/engine=composed-policy-16           0.000 ± 0%
+Tier3MatcherVsPolicy/tree=moby/engine=cumulative-matcher-16             1.000 ± 0%
+Tier3MatcherVsPolicy/tree=moby/engine=composed-policy-16                0.000 ± 0%
+Tier3SingleVsComposed/tree=pair-single-16                               0.000 ± 0%
+Tier3SingleVsComposed/tree=pair-nested-16                               0.000 ± 0%
+Tier3Ranks/ranks=standard-16                                            0.000 ± 0%
+Tier3Ranks/ranks=custom-16                                              0.000 ± 0%
+Tier3Reserved/reserved-on-16                                            0.000 ± 0%
+Tier3Reserved/reserved-off-16                                           0.000 ± 0%
+Tier3Depth/tree=nested-d2-16                                            0.000 ± 0%
+Tier3Depth/tree=nested-d8-16                                            0.000 ± 0%
+Tier3Depth/tree=nested-d32-16                                           0.000 ± 0%
+Tier3DecisionWorkload/workload=ancestor-blocked-16                      1.000 ± 0%
+Tier3DecisionWorkload/workload=endpoint-decided-16                      0.000 ± 0%
+Tier3DecisionWorkload/workload=clean-miss-16                            0.000 ± 0%
+geomean                                                                            ¹
+¹ summaries must be >0 to compute geomean

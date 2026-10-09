@@ -1,0 +1,101 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+                                                                 │ results\tier2.txt │
+                                                                 │      sec/op       │
+Tier2Cold/tree=nested-d8/driver=go-ignore-16                            699.8µ ±  5%
+Tier2Cold/tree=nested-d8/driver=git-pkgs-16                             48.64m ±  6%
+Tier2Cold/tree=nested-d8/driver=sabhiram(root-file-only)-16             326.1µ ±  9%
+Tier2Cold/tree=moby/driver=go-ignore-16                                 379.1µ ±  4%
+Tier2Cold/tree=moby/driver=git-pkgs-16                                  496.8m ±  2%
+Tier2Cold/tree=moby/driver=sabhiram(root-file-only)-16                  616.2µ ±  7%
+Tier2ColdSweep/tree=nested-d8/driver=go-ignore-16                       2.282m ±  1%
+Tier2ColdSweep/tree=nested-d8/driver=git-pkgs-16                        48.06m ±  1%
+Tier2ColdSweep/tree=nested-d8/driver=sabhiram(root-file-only)-16        1.512m ±  2%
+Tier2ColdSweep/tree=moby/driver=go-ignore-16                            22.88m ±  6%
+Tier2ColdSweep/tree=moby/driver=git-pkgs-16                             505.3m ±  5%
+Tier2ColdSweep/tree=moby/driver=sabhiram(root-file-only)-16             36.14m ±  2%
+Tier2Warm/tree=nested-d8/driver=go-ignore-16                            880.1n ±  2%
+Tier2Warm/tree=nested-d8/driver=git-pkgs-16                             902.5n ± 13%
+Tier2Warm/tree=nested-d8/driver=sabhiram(root-file-only)-16             5.827µ ±  1%
+Tier2Warm/tree=moby/driver=go-ignore-16                                 941.7n ±  6%
+Tier2Warm/tree=moby/driver=git-pkgs-16                                  2.704µ ±  2%
+Tier2Warm/tree=moby/driver=sabhiram(root-file-only)-16                  22.33µ ±  3%
+Tier2Walk/tree=nested-d8/driver=go-ignore-16                            1.780m ±  3%
+Tier2Walk/tree=nested-d8/driver=git-pkgs-16                             48.26m ±  2%
+Tier2Walk/tree=moby/driver=go-ignore-16                                 376.5m ±  6%
+Tier2Walk/tree=moby/driver=git-pkgs-16                                  488.4m ±  3%
+geomean                                                                 1.309m
+
+                                                                 │ results\tier2.txt │
+                                                                 │       B/op        │
+Tier2Cold/tree=nested-d8/driver=go-ignore-16                          48.27Ki ± 0%
+Tier2Cold/tree=nested-d8/driver=git-pkgs-16                           490.8Ki ± 3%
+Tier2Cold/tree=nested-d8/driver=sabhiram(root-file-only)-16           145.7Ki ± 0%
+Tier2Cold/tree=moby/driver=go-ignore-16                               31.51Ki ± 0%
+Tier2Cold/tree=moby/driver=git-pkgs-16                                15.93Mi ± 1%
+Tier2Cold/tree=moby/driver=sabhiram(root-file-only)-16                398.6Ki ± 0%
+Tier2ColdSweep/tree=nested-d8/driver=go-ignore-16                     122.4Ki ± 0%
+Tier2ColdSweep/tree=nested-d8/driver=git-pkgs-16                      484.9Ki ± 2%
+Tier2ColdSweep/tree=nested-d8/driver=sabhiram(root-file-only)-16      145.5Ki ± 0%
+Tier2ColdSweep/tree=moby/driver=go-ignore-16                          1.063Mi ± 0%
+Tier2ColdSweep/tree=moby/driver=git-pkgs-16                           15.82Mi ± 1%
+Tier2ColdSweep/tree=moby/driver=sabhiram(root-file-only)-16           397.6Ki ± 2%
+Tier2Warm/tree=nested-d8/driver=go-ignore-16                            3.000 ± 0%
+Tier2Warm/tree=nested-d8/driver=git-pkgs-16                             0.000 ± 0%
+Tier2Warm/tree=nested-d8/driver=sabhiram(root-file-only)-16             0.000 ± 0%
+Tier2Warm/tree=moby/driver=go-ignore-16                                 0.000 ± 0%
+Tier2Warm/tree=moby/driver=git-pkgs-16                                  0.000 ± 0%
+Tier2Warm/tree=moby/driver=sabhiram(root-file-only)-16                  0.000 ± 0%
+Tier2Walk/tree=nested-d8/driver=go-ignore-16                          133.9Ki ± 0%
+Tier2Walk/tree=nested-d8/driver=git-pkgs-16                           476.4Ki ± 2%
+Tier2Walk/tree=moby/driver=go-ignore-16                               15.11Mi ± 7%
+Tier2Walk/tree=moby/driver=git-pkgs-16                                15.40Mi ± 1%
+geomean                                                                            ¹
+¹ summaries must be >0 to compute geomean
+
+                                                                 │ results\tier2.txt │
+                                                                 │     allocs/op     │
+Tier2Cold/tree=nested-d8/driver=go-ignore-16                            250.0 ± 0%
+Tier2Cold/tree=nested-d8/driver=git-pkgs-16                            4.804k ± 0%
+Tier2Cold/tree=nested-d8/driver=sabhiram(root-file-only)-16            1.614k ± 0%
+Tier2Cold/tree=moby/driver=go-ignore-16                                 150.0 ± 0%
+Tier2Cold/tree=moby/driver=git-pkgs-16                                 198.3k ± 0%
+Tier2Cold/tree=moby/driver=sabhiram(root-file-only)-16                 4.242k ± 0%
+Tier2ColdSweep/tree=nested-d8/driver=go-ignore-16                       756.0 ± 0%
+Tier2ColdSweep/tree=nested-d8/driver=git-pkgs-16                       4.804k ± 0%
+Tier2ColdSweep/tree=nested-d8/driver=sabhiram(root-file-only)-16       1.615k ± 0%
+Tier2ColdSweep/tree=moby/driver=go-ignore-16                           8.035k ± 0%
+Tier2ColdSweep/tree=moby/driver=git-pkgs-16                            198.3k ± 0%
+Tier2ColdSweep/tree=moby/driver=sabhiram(root-file-only)-16            4.242k ± 0%
+Tier2Warm/tree=nested-d8/driver=go-ignore-16                            0.000 ± 0%
+Tier2Warm/tree=nested-d8/driver=git-pkgs-16                             0.000 ± 0%
+Tier2Warm/tree=nested-d8/driver=sabhiram(root-file-only)-16             0.000 ± 0%
+Tier2Warm/tree=moby/driver=go-ignore-16                                 0.000 ± 0%
+Tier2Warm/tree=moby/driver=git-pkgs-16                                  0.000 ± 0%
+Tier2Warm/tree=moby/driver=sabhiram(root-file-only)-16                  0.000 ± 0%
+Tier2Walk/tree=nested-d8/driver=go-ignore-16                           1.416k ± 0%
+Tier2Walk/tree=nested-d8/driver=git-pkgs-16                            4.805k ± 0%
+Tier2Walk/tree=moby/driver=go-ignore-16                                161.4k ± 5%
+Tier2Walk/tree=moby/driver=git-pkgs-16                                 198.3k ± 0%
+geomean                                                                            ¹
+¹ summaries must be >0 to compute geomean
+
+                                                                 │ results\tier2.txt │
+                                                                 │     queries/s     │
+Tier2ColdSweep/tree=nested-d8/driver=go-ignore-16                        91.60k ± 1%
+Tier2ColdSweep/tree=nested-d8/driver=git-pkgs-16                         4.348k ± 1%
+Tier2ColdSweep/tree=nested-d8/driver=sabhiram(root-file-only)-16         138.3k ± 2%
+Tier2ColdSweep/tree=moby/driver=go-ignore-16                             69.92k ± 5%
+Tier2ColdSweep/tree=moby/driver=git-pkgs-16                              3.166k ± 5%
+Tier2ColdSweep/tree=moby/driver=sabhiram(root-file-only)-16              44.28k ± 2%
+geomean                                                                  28.53k
+
+                                             │ results\tier2.txt │
+                                             │     entries/s     │
+Tier2Walk/tree=nested-d8/driver=go-ignore-16         133.7k ± 3%
+Tier2Walk/tree=nested-d8/driver=git-pkgs-16          2.445k ± 2%
+Tier2Walk/tree=moby/driver=go-ignore-16              63.70k ± 6%
+Tier2Walk/tree=moby/driver=git-pkgs-16               44.48k ± 3%
+geomean                                              31.02k

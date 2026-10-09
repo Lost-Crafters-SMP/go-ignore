@@ -1,0 +1,11 @@
+environment record — 2026-10-09 18:29
+host: Windows 11, AMD Ryzen 7 5800X3D (8C/16T)
+go version go1.27.1 windows/amd64
+git version 2.56.0.windows.1
+module: go.lostcrafters.com/ignore @ 06927d3ddb12fd4b910733bf1562b7f271d52103
+bench module deps:
+go.lostcrafters.com/ignore/bench
+github.com/git-pkgs/gitignore v1.3.0
+github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
+go.lostcrafters.com/ignore v0.0.0-00010101000000-000000000000 => ../
+golang.org/x/perf v0.0.0-20260929162123-406019bb8b68

@@ -1,0 +1,138 @@
+goos: windows
+goarch: amd64
+pkg: go.lostcrafters.com/ignore/bench
+cpu: AMD Ryzen 7 5800X3D 8-Core Processor           
+BenchmarkTier2Cold/tree=nested-d8/driver=go-ignore-16         	    1768	    668934 ns/op	   49434 B/op	     250 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=go-ignore-16         	    1765	    664060 ns/op	   49431 B/op	     250 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=go-ignore-16         	    1779	    712131 ns/op	   49431 B/op	     250 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=go-ignore-16         	    1657	    703017 ns/op	   49432 B/op	     250 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=go-ignore-16         	    1744	    696550 ns/op	   49435 B/op	     250 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=go-ignore-16         	    1444	    717281 ns/op	   49432 B/op	     250 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=git-pkgs-16          	      21	  47999295 ns/op	  489377 B/op	    4807 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=git-pkgs-16          	      25	  49205880 ns/op	  500561 B/op	    4805 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=git-pkgs-16          	      21	  51661995 ns/op	  504697 B/op	    4804 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=git-pkgs-16          	      24	  47857808 ns/op	  507493 B/op	    4805 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=git-pkgs-16          	      24	  48750133 ns/op	  499303 B/op	    4804 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=git-pkgs-16          	      24	  48538021 ns/op	  510184 B/op	    4804 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=sabhiram(root-file-only)-16         	    4904	    316932 ns/op	  149125 B/op	    1614 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=sabhiram(root-file-only)-16         	    4783	    298138 ns/op	  149145 B/op	    1614 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=sabhiram(root-file-only)-16         	    3792	    344131 ns/op	  149428 B/op	    1615 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=sabhiram(root-file-only)-16         	    4006	    314980 ns/op	  149239 B/op	    1614 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=sabhiram(root-file-only)-16         	    5767	    335272 ns/op	  149239 B/op	    1614 allocs/op
+BenchmarkTier2Cold/tree=nested-d8/driver=sabhiram(root-file-only)-16         	    3636	    339001 ns/op	  149444 B/op	    1615 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=go-ignore-16                             	    3158	    379536 ns/op	   32265 B/op	     150 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=go-ignore-16                             	    3274	    382920 ns/op	   32264 B/op	     150 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=go-ignore-16                             	    3363	    395472 ns/op	   32264 B/op	     150 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=go-ignore-16                             	    3132	    375784 ns/op	   32264 B/op	     150 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=go-ignore-16                             	    3274	    373634 ns/op	   32263 B/op	     150 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=go-ignore-16                             	    3316	    378603 ns/op	   32263 B/op	     150 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=git-pkgs-16                              	       2	 500933250 ns/op	16702960 B/op	  198301 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=git-pkgs-16                              	       3	 495225767 ns/op	16746666 B/op	  198302 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=git-pkgs-16                              	       2	 505558100 ns/op	16702056 B/op	  198299 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=git-pkgs-16                              	       3	 498334133 ns/op	16659856 B/op	  198298 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=git-pkgs-16                              	       3	 490357067 ns/op	16549237 B/op	  198296 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=git-pkgs-16                              	       3	 488281767 ns/op	16944253 B/op	  198310 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=sabhiram(root-file-only)-16              	    2568	    658317 ns/op	  408528 B/op	    4242 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=sabhiram(root-file-only)-16              	    1990	    611097 ns/op	  408204 B/op	    4242 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=sabhiram(root-file-only)-16              	    2175	    588034 ns/op	  407974 B/op	    4242 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=sabhiram(root-file-only)-16              	    2022	    618054 ns/op	  408168 B/op	    4242 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=sabhiram(root-file-only)-16              	    1824	    622895 ns/op	  408524 B/op	    4242 allocs/op
+BenchmarkTier2Cold/tree=moby/driver=sabhiram(root-file-only)-16              	    2553	    614297 ns/op	  407732 B/op	    4242 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=go-ignore-16                   	     506	   2313083 ns/op	     90356 queries/s	  125303 B/op	     756 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=go-ignore-16                   	     528	   2258150 ns/op	     92554 queries/s	  125304 B/op	     756 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=go-ignore-16                   	     458	   2298684 ns/op	     90922 queries/s	  125303 B/op	     756 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=go-ignore-16                   	     499	   2307294 ns/op	     90582 queries/s	  125306 B/op	     756 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=go-ignore-16                   	     525	   2264887 ns/op	     92278 queries/s	  125305 B/op	     756 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=go-ignore-16                   	     528	   2249886 ns/op	     92894 queries/s	  125303 B/op	     756 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=git-pkgs-16                    	      22	  47885623 ns/op	      4365 queries/s	  493728 B/op	    4804 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=git-pkgs-16                    	      25	  48076936 ns/op	      4347 queries/s	  487115 B/op	    4804 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=git-pkgs-16                    	      25	  48391912 ns/op	      4319 queries/s	  508167 B/op	    4804 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=git-pkgs-16                    	      25	  48052536 ns/op	      4349 queries/s	  489640 B/op	    4803 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=git-pkgs-16                    	      24	  48621358 ns/op	      4299 queries/s	  499399 B/op	    4804 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=git-pkgs-16                    	      25	  47357708 ns/op	      4413 queries/s	  505488 B/op	    4804 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=sabhiram(root-file-only)-16    	     739	   1496394 ns/op	    139669 queries/s	  148559 B/op	    1614 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=sabhiram(root-file-only)-16    	     793	   1490643 ns/op	    140208 queries/s	  148813 B/op	    1615 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=sabhiram(root-file-only)-16    	     738	   1541838 ns/op	    135552 queries/s	  149037 B/op	    1615 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=sabhiram(root-file-only)-16    	     822	   1494808 ns/op	    139817 queries/s	  149492 B/op	    1615 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=sabhiram(root-file-only)-16    	     822	   1530953 ns/op	    136516 queries/s	  149634 B/op	    1615 allocs/op
+BenchmarkTier2ColdSweep/tree=nested-d8/driver=sabhiram(root-file-only)-16    	     688	   1526886 ns/op	    136880 queries/s	  148991 B/op	    1615 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=go-ignore-16                        	      51	  22791875 ns/op	     70200 queries/s	 1114401 B/op	    8035 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=go-ignore-16                        	      54	  24159411 ns/op	     66227 queries/s	 1114400 B/op	    8035 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=go-ignore-16                        	      56	  23523598 ns/op	     68017 queries/s	 1114397 B/op	    8035 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=go-ignore-16                        	      48	  21887202 ns/op	     73102 queries/s	 1114446 B/op	    8035 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=go-ignore-16                        	      44	  22974161 ns/op	     69643 queries/s	 1114431 B/op	    8035 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=go-ignore-16                        	      52	  22454444 ns/op	     71255 queries/s	 1114429 B/op	    8035 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=git-pkgs-16                         	       2	 503549150 ns/op	      3177 queries/s	16603700 B/op	  198296 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=git-pkgs-16                         	       2	 532107350 ns/op	      3007 queries/s	16507588 B/op	  198293 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=git-pkgs-16                         	       3	 494225233 ns/op	      3237 queries/s	16660106 B/op	  198299 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=git-pkgs-16                         	       2	 507246150 ns/op	      3154 queries/s	16570984 B/op	  198295 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=git-pkgs-16                         	       2	 507121800 ns/op	      3155 queries/s	16573444 B/op	  198296 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=git-pkgs-16                         	       2	 501416250 ns/op	      3191 queries/s	16704100 B/op	  198300 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=sabhiram(root-file-only)-16         	      30	  35663210 ns/op	     44864 queries/s	  406402 B/op	    4242 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=sabhiram(root-file-only)-16         	      31	  36376558 ns/op	     43984 queries/s	  408776 B/op	    4243 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=sabhiram(root-file-only)-16         	      33	  35432067 ns/op	     45157 queries/s	  407927 B/op	    4242 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=sabhiram(root-file-only)-16         	      34	  35992462 ns/op	     44454 queries/s	  413338 B/op	    4244 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=sabhiram(root-file-only)-16         	      34	  36634818 ns/op	     43674 queries/s	  404391 B/op	    4242 allocs/op
+BenchmarkTier2ColdSweep/tree=moby/driver=sabhiram(root-file-only)-16         	      33	  36279188 ns/op	     44102 queries/s	  404423 B/op	    4242 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=go-ignore-16                        	 1359217	       875.5 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=go-ignore-16                        	 1375120	       884.8 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=go-ignore-16                        	 1385622	       867.1 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=go-ignore-16                        	 1386544	       866.4 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=go-ignore-16                        	 1380704	       885.1 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=go-ignore-16                        	 1354009	       890.0 ns/op	       3 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=git-pkgs-16                         	 1359758	       881.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=git-pkgs-16                         	 1331205	       899.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=git-pkgs-16                         	 1000000	      1017 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=git-pkgs-16                         	 1334485	       898.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=git-pkgs-16                         	 1301895	       927.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=git-pkgs-16                         	 1342002	       905.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=sabhiram(root-file-only)-16         	  206498	      5782 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=sabhiram(root-file-only)-16         	  211171	      5835 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=sabhiram(root-file-only)-16         	  212790	      5883 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=sabhiram(root-file-only)-16         	  206630	      5910 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=sabhiram(root-file-only)-16         	  211321	      5783 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=nested-d8/driver=sabhiram(root-file-only)-16         	  205441	      5820 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=go-ignore-16                             	 1278607	       932.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=go-ignore-16                             	 1291488	       951.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=go-ignore-16                             	 1000000	      1002 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=go-ignore-16                             	 1243156	       965.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=go-ignore-16                             	 1299510	       917.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=go-ignore-16                             	 1313872	       914.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=git-pkgs-16                              	  450066	      2740 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=git-pkgs-16                              	  458342	      2674 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=git-pkgs-16                              	  388748	      2675 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=git-pkgs-16                              	  457520	      2691 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=git-pkgs-16                              	  450982	      2716 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=git-pkgs-16                              	  447386	      2756 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=sabhiram(root-file-only)-16              	   55314	     21696 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=sabhiram(root-file-only)-16              	   52899	     22934 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=sabhiram(root-file-only)-16              	   53280	     22573 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=sabhiram(root-file-only)-16              	   50544	     22613 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=sabhiram(root-file-only)-16              	   54985	     21776 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Warm/tree=moby/driver=sabhiram(root-file-only)-16              	   54031	     22078 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=go-ignore-16                        	     642	   1796753 ns/op	    132461 entries/s	  136905 B/op	    1416 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=go-ignore-16                        	     702	   1735442 ns/op	    137141 entries/s	  137453 B/op	    1416 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=go-ignore-16                        	     687	   1740692 ns/op	    136727 entries/s	  136563 B/op	    1416 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=go-ignore-16                        	     685	   1792730 ns/op	    132758 entries/s	  137536 B/op	    1416 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=go-ignore-16                        	     658	   1788253 ns/op	    133091 entries/s	  136440 B/op	    1416 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=go-ignore-16                        	     643	   1771869 ns/op	    134321 entries/s	  137298 B/op	    1416 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=git-pkgs-16                         	      24	  48015892 ns/op	      2458 entries/s	  489844 B/op	    4805 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=git-pkgs-16                         	      25	  48294772 ns/op	      2443 entries/s	  485727 B/op	    4805 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=git-pkgs-16                         	      25	  47459988 ns/op	      2486 entries/s	  493622 B/op	    4806 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=git-pkgs-16                         	      25	  48353768 ns/op	      2440 entries/s	  498847 B/op	    4806 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=git-pkgs-16                         	      24	  48746842 ns/op	      2421 entries/s	  484409 B/op	    4805 allocs/op
+BenchmarkTier2Walk/tree=nested-d8/driver=git-pkgs-16                         	      22	  48216464 ns/op	      2447 entries/s	  484504 B/op	    4805 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=go-ignore-16                             	       3	 399939500 ns/op	     59969 entries/s	17029992 B/op	  170066 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=go-ignore-16                             	       3	 377553133 ns/op	     63525 entries/s	15892456 B/op	  161369 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=go-ignore-16                             	       3	 375464767 ns/op	     63878 entries/s	15848893 B/op	  161370 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=go-ignore-16                             	       3	 372782800 ns/op	     64338 entries/s	15783450 B/op	  161368 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=go-ignore-16                             	       3	 369361500 ns/op	     64934 entries/s	15695792 B/op	  161363 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=go-ignore-16                             	       3	 383578333 ns/op	     62527 entries/s	15848941 B/op	  161370 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=git-pkgs-16                              	       3	 485908233 ns/op	     44706 entries/s	16029458 B/op	  198271 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=git-pkgs-16                              	       3	 483060967 ns/op	     44969 entries/s	16116989 B/op	  198275 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=git-pkgs-16                              	       3	 504938233 ns/op	     43021 entries/s	16182192 B/op	  198273 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=git-pkgs-16                              	       2	 504630450 ns/op	     43047 entries/s	16203380 B/op	  198274 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=git-pkgs-16                              	       3	 486655467 ns/op	     44637 entries/s	16071413 B/op	  198268 allocs/op
+BenchmarkTier2Walk/tree=moby/driver=git-pkgs-16                              	       3	 490062933 ns/op	     44327 entries/s	16291576 B/op	  198278 allocs/op
+PASS
+ok  	go.lostcrafters.com/ignore/bench	163.406s
