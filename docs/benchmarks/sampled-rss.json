@@ -1,0 +1,8 @@
+{
+  "Platform": "Windows amd64",
+  "Metric": "sampled process working-set bytes (not retained Go heap)",
+  "PeakBytes": 365813760,
+  "Samples": 30,
+  "RequestedIntervalMilliseconds": 2,
+  "ExitCode": 0
+}

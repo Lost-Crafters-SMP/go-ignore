@@ -1,0 +1,138 @@
+=== RUN   TestMillionReferenceComparisons
+    reference_test.go:218: deterministic comparisons=1000000 seeds=20261009,4d32 eligible=1000000 missing=0 failed=0
+--- PASS: TestMillionReferenceComparisons (0.26s)
+=== RUN   TestKillableScaling
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=8 length=64 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=8 length=256 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=8 length=1024 iterations=20 elapsed=1.5618ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=16 length=64 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=16 length=256 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=16 length=1024 iterations=20 elapsed=1.0622ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=24 length=64 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=24 length=256 iterations=20 elapsed=515.5┬Ás
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=24 length=1024 iterations=20 elapsed=2.0995ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=8 length=64 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=8 length=256 iterations=20 elapsed=536┬Ás
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=8 length=1024 iterations=20 elapsed=678.9┬Ás
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=16 length=64 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=16 length=256 iterations=20 elapsed=533.4┬Ás
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=16 length=1024 iterations=20 elapsed=1.0689ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=24 length=64 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=24 length=256 iterations=20 elapsed=533.7┬Ás
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=24 length=1024 iterations=20 elapsed=2.1252ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=8 length=64 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=8 length=256 iterations=20 elapsed=512.6┬Ás
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=8 length=1024 iterations=20 elapsed=1.0691ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=16 length=64 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=16 length=256 iterations=20 elapsed=543.6┬Ás
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=16 length=1024 iterations=20 elapsed=1.609ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=24 length=64 iterations=20 elapsed=0s
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=24 length=256 iterations=20 elapsed=529.1┬Ás
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=24 length=1024 iterations=20 elapsed=2.6335ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+--- PASS: TestKillableScaling (0.47s)
+=== RUN   TestRetainedLiteralMemory
+    resource_test.go:95: 1MiB source escaped=false retained-heap=2168192 total-allocation=6295680 mallocs=47 units=1
+    resource_test.go:95: 1MiB source escaped=true retained-heap=1611008 total-allocation=3592192 mallocs=42 units=1
+--- PASS: TestRetainedLiteralMemory (0.01s)
+=== RUN   TestMeasuredAllocations
+    resource_test.go:113: pattern="*.log" path="a/b.log" dir=false allocs/op=0
+    resource_test.go:113: pattern="!keep" path="a/keep" dir=false allocs/op=0
+    resource_test.go:113: pattern="x" path="a/b" dir=false allocs/op=0
+    resource_test.go:113: pattern="d/**" path="d" dir=true allocs/op=0
+    resource_test.go:113: pattern="d/" path="d/file" dir=false allocs/op=1
+--- PASS: TestMeasuredAllocations (0.00s)
+=== RUN   TestDefaultCapBoundaries
+    resource_test.go:141: default cap boundary bytes=104857599 wholly-skipped=false subsequent-source-active=true
+    resource_test.go:141: default cap boundary bytes=104857600 wholly-skipped=false subsequent-source-active=true
+    resource_test.go:141: default cap boundary bytes=104857601 wholly-skipped=true subsequent-source-active=true
+--- PASS: TestDefaultCapBoundaries (0.19s)
+=== RUN   TestRetainedRuleSets
+    resource_test.go:160: rules=10 input=110 retained-heap=-5008 total-allocation=2584 mallocs=47
+    resource_test.go:160: rules=100 input=1190 retained-heap=18320 total-allocation=25112 mallocs=410
+    resource_test.go:160: rules=1000 input=12890 retained-heap=224848 total-allocation=247160 mallocs=4013
+    resource_test.go:160: rules=10000 input=138890 retained-heap=2304464 total-allocation=2609720 mallocs=40020
+    resource_test.go:160: rules=100000 input=1488890 retained-heap=23269984 total-allocation=27608040 mallocs=400055
+--- PASS: TestRetainedRuleSets (0.04s)
+PASS
+ok  	go.lostcrafters.com/ignore	0.996s

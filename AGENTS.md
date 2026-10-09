@@ -1,6 +1,6 @@
 # Repository context
 
-- This is a standalone Git-compatible ignore matching library module, `go.lostcrafters.com/ignore`, not an application. The root package is `ignore`; no public API is implemented yet. `docs/spec/` is the behavioural specification, fixtures, public API and acceptance contract. `docs/design.md` is a architectural documentation, not implementation code.
+- This is a standalone Git-compatible ignore matching library module, `go.lostcrafters.com/ignore`, not an application. The root package is `ignore`.
 - Keep library code at the module root; introduce subpackages only as needed (see `README.md`). `go.work` is ignored and is not part of the shared setup.
 - V1 scope: byte-exact gitignore semantics, winning-rule provenance and blocking ancestors, fixed ranks independent of scope depth, nested policies, and later pruning traversal. Match's canonical slash-form directory exclusion alone is not a traversal block; bare strict-ancestor decisions establish blocking. The Git executable is a black-box behavioural reference, never a source-code template. Custom-rank semantics are library-specific, not Git-oracle claims.
 

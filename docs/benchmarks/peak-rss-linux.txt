@@ -1,0 +1,40 @@
+=== RUN   TestRetainedLiteralMemory
+    resource_test.go:95: 1MiB source escaped=false retained-heap=2161144 total-allocation=6290776 mallocs=41 units=1
+    resource_test.go:95: 1MiB source escaped=true retained-heap=1606120 total-allocation=3587304 mallocs=37 units=1
+--- PASS: TestRetainedLiteralMemory (0.02s)
+=== RUN   TestDefaultCapBoundaries
+    resource_test.go:141: default cap boundary bytes=104857599 wholly-skipped=false subsequent-source-active=true
+    resource_test.go:141: default cap boundary bytes=104857600 wholly-skipped=false subsequent-source-active=true
+    resource_test.go:141: default cap boundary bytes=104857601 wholly-skipped=true subsequent-source-active=true
+--- PASS: TestDefaultCapBoundaries (0.31s)
+=== RUN   TestRetainedRuleSets
+    resource_test.go:160: rules=10 input=110 retained-heap=176 total-allocation=2584 mallocs=47
+    resource_test.go:160: rules=100 input=1190 retained-heap=22312 total-allocation=25336 mallocs=412
+    resource_test.go:160: rules=1000 input=12890 retained-heap=228616 total-allocation=247160 mallocs=4013
+    resource_test.go:160: rules=10000 input=138890 retained-heap=2308232 total-allocation=2609720 mallocs=40020
+    resource_test.go:160: rules=100000 input=1488890 retained-heap=23247992 total-allocation=27587576 mallocs=400031
+--- PASS: TestRetainedRuleSets (0.05s)
+PASS
+	Command being timed: "scratch/ignore-m2.test -test.run=^Test(RetainedLiteralMemory|RetainedRuleSets|DefaultCapBoundaries)$ -test.v"
+	User time (seconds): 0.18
+	System time (seconds): 0.23
+	Percent of CPU this job got: 111%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.37
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 317896
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 81998
+	Voluntary context switches: 1297
+	Involuntary context switches: 2
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

@@ -1,0 +1,17 @@
+=== RUN   TestRetainedLiteralMemory
+    resource_test.go:95: 1MiB source escaped=false retained-heap=2165928 total-allocation=6300744 mallocs=51 units=1
+    resource_test.go:95: 1MiB source escaped=true retained-heap=1610992 total-allocation=3592176 mallocs=41 units=1
+--- PASS: TestRetainedLiteralMemory (0.01s)
+=== RUN   TestDefaultCapBoundaries
+    resource_test.go:141: default cap boundary bytes=104857599 wholly-skipped=false subsequent-source-active=true
+    resource_test.go:141: default cap boundary bytes=104857600 wholly-skipped=false subsequent-source-active=true
+    resource_test.go:141: default cap boundary bytes=104857601 wholly-skipped=true subsequent-source-active=true
+--- PASS: TestDefaultCapBoundaries (0.19s)
+=== RUN   TestRetainedRuleSets
+    resource_test.go:160: rules=10 input=110 retained-heap=-4992 total-allocation=2600 mallocs=48
+    resource_test.go:160: rules=100 input=1190 retained-heap=18320 total-allocation=25112 mallocs=410
+    resource_test.go:160: rules=1000 input=12890 retained-heap=224864 total-allocation=247176 mallocs=4014
+    resource_test.go:160: rules=10000 input=138890 retained-heap=2304464 total-allocation=2609720 mallocs=40020
+    resource_test.go:160: rules=100000 input=1488890 retained-heap=23262160 total-allocation=27602832 mallocs=400048
+--- PASS: TestRetainedRuleSets (0.04s)
+PASS

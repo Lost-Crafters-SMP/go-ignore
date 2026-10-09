@@ -1,0 +1,5 @@
+go1.27.1
+linux
+amd64
+1
+gcc

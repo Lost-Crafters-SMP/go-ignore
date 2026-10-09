@@ -65,9 +65,20 @@ jobs:
       - run: go test ./... -count=1 -timeout=120s
       - run: go test -race ./... -count=1 -timeout=180s
 
+      # The oracle protocol requires an external Git >=2.52. Fail closed if a runner's
+      # preinstalled version is too old; do not certify skipped oracle evidence.
+      - name: Live Git compatibility and provenance
+        env:
+          IGNORE_LIVE_GIT: "1"
+        run: go test . -run '^TestLiveGit' -count=1 -v -timeout=300s
+      - name: Bounded matching and retained-memory checks
+        env:
+          IGNORE_RESOURCE: "1"
+        run: go test . -run '^Test(KillableScaling|RetainedLiteralMemory|RetainedRuleSets|DefaultCapBoundaries)$' -count=1 -v -timeout=180s
+
   # Quality gates that add no platform-specific coverage: govulncheck performs
-  # source-level analysis on the library module. Fuzz and benchmark smoke
-  # checks exercise the matching core. The behavioural
+  # source-level analysis on the library module. Independent fuzz and benchmark
+  # gates exercise the matching core. The behavioural
   # behavioural specification is in docs/spec/.
   quality:
     runs-on: ubuntu-latest
@@ -82,3 +93,9 @@ jobs:
       # vulnerability. Downloads the vulnerability database at run time.
       - name: Vulnerability scan
         run: go tool govulncheck ./...
+      - name: Parser ownership fuzz
+        run: go test . -run '^$' -fuzz '^FuzzParserOwnership$' -fuzztime=1000000x -parallel=4 -timeout=900s
+      - name: Independent pattern equivalence fuzz
+        run: go test . -run '^$' -fuzz '^FuzzPatternEquivalence$' -fuzztime=1000000x -parallel=4 -timeout=900s
+      - name: Benchmark smoke
+        run: go test . -run '^$' -bench '^Benchmark' -benchmem -benchtime=1x -timeout=180s

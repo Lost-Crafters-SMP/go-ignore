@@ -1,0 +1,112 @@
+=== RUN   TestKillableScaling
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=8 length=64 iterations=2000 elapsed=4.1832ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=8 length=256 iterations=2000 elapsed=16.1895ms
+        --- PASS: TestAdversaryWorker (0.02s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=8 length=1024 iterations=2000 elapsed=67.0716ms
+        --- PASS: TestAdversaryWorker (0.07s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=16 length=64 iterations=2000 elapsed=8.3166ms
+        --- PASS: TestAdversaryWorker (0.01s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=16 length=256 iterations=2000 elapsed=31.846ms
+        --- PASS: TestAdversaryWorker (0.03s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=16 length=1024 iterations=2000 elapsed=142.0489ms
+        --- PASS: TestAdversaryWorker (0.14s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=24 length=64 iterations=2000 elapsed=13.5921ms
+        --- PASS: TestAdversaryWorker (0.01s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=24 length=256 iterations=2000 elapsed=55.8276ms
+        --- PASS: TestAdversaryWorker (0.06s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=star stars=24 length=1024 iterations=2000 elapsed=213.5639ms
+        --- PASS: TestAdversaryWorker (0.21s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=8 length=64 iterations=2000 elapsed=3.6359ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=8 length=256 iterations=2000 elapsed=14.6395ms
+        --- PASS: TestAdversaryWorker (0.01s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=8 length=1024 iterations=2000 elapsed=59.4038ms
+        --- PASS: TestAdversaryWorker (0.06s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=16 length=64 iterations=2000 elapsed=7.3229ms
+        --- PASS: TestAdversaryWorker (0.01s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=16 length=256 iterations=2000 elapsed=27.0995ms
+        --- PASS: TestAdversaryWorker (0.03s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=16 length=1024 iterations=2000 elapsed=120.4025ms
+        --- PASS: TestAdversaryWorker (0.12s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=24 length=64 iterations=2000 elapsed=11.066ms
+        --- PASS: TestAdversaryWorker (0.01s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=24 length=256 iterations=2000 elapsed=43.5013ms
+        --- PASS: TestAdversaryWorker (0.04s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=class stars=24 length=1024 iterations=2000 elapsed=200.2065ms
+        --- PASS: TestAdversaryWorker (0.20s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=8 length=64 iterations=2000 elapsed=3.1165ms
+        --- PASS: TestAdversaryWorker (0.00s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=8 length=256 iterations=2000 elapsed=15.9621ms
+        --- PASS: TestAdversaryWorker (0.02s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=8 length=1024 iterations=2000 elapsed=54.6759ms
+        --- PASS: TestAdversaryWorker (0.05s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=16 length=64 iterations=2000 elapsed=6.2543ms
+        --- PASS: TestAdversaryWorker (0.01s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=16 length=256 iterations=2000 elapsed=39.7102ms
+        --- PASS: TestAdversaryWorker (0.04s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=16 length=1024 iterations=2000 elapsed=123.9577ms
+        --- PASS: TestAdversaryWorker (0.12s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=24 length=64 iterations=2000 elapsed=9.4292ms
+        --- PASS: TestAdversaryWorker (0.01s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=24 length=256 iterations=2000 elapsed=37.2636ms
+        --- PASS: TestAdversaryWorker (0.04s)
+        PASS
+    resource_test.go:64: === RUN   TestAdversaryWorker
+            resource_test.go:42: mode=directory stars=24 length=1024 iterations=2000 elapsed=148.3664ms
+        --- PASS: TestAdversaryWorker (0.15s)
+        PASS
+--- PASS: TestKillableScaling (1.89s)
+PASS
+ok  	go.lostcrafters.com/ignore	1.906s
