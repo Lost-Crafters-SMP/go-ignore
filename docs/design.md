@@ -31,7 +31,14 @@ values, and caller source bytes are not retained or mutated.
 `builder.go` shares the parsing and program-compilation phase with `Compile`
 through `compiler`, which owns the rule and instruction arenas across batches so
 accepted sources are never parsed or compiled twice; one-shot `Compile` still
-builds its index in one bulk pass. `Builder.Add` validates a whole batch
+builds its index in one bulk pass. After the first batch the program arena is
+warm: new program stores are sized to cover as much work again as everything
+stored so far, capped at one normal batch, so successive small additions share
+one store instead of allocating exact-sized arrays per program. Cold arenas —
+every one-shot `Compile` and a builder's first batch — keep exact sizing, tiny
+histories keep proportionate sizing, and rule chunks always stay exact-sized
+because their large slots make spare capacity a poor trade against the few chunk
+objects it saves. `Builder.Add` validates a whole batch
 (cumulative error offsets, NUL even in oversized sources), checks cumulative
 source, rule and scope counts against index representation limits, and compiles
 the batch into unpublished storage. Only then does an infallible commit run:

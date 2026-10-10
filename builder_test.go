@@ -475,6 +475,72 @@ func TestBuilderMixedDepthDescent(t *testing.T) {
 	}
 }
 
+// TestWarmArenaSizing pins the arena reuse contract: cold arenas (one-shot
+// Compile and a builder's first batch) size storage exactly, warm program
+// stores are reused capped at one normal batch, tiny histories keep
+// proportionate sizing, and handed-out programs never gain spare capacity.
+func TestWarmArenaSizing(t *testing.T) {
+	// Cold single batch: chunks sized exactly to the source. The program
+	// arena is marked warm only after the batch, so this batch's sizing was
+	// cold and one-shot Compile behaviour is unchanged.
+	c := newCompiler(false)
+	rules, diagnostics := c.compile([]Source{{Data: []byte("a\nb\n[")}}, 0, defaultSourceBytes)
+	if len(rules) != 3 || len(diagnostics) != 1 || len(c.rules.chunk) != 3 {
+		t.Fatalf("cold chunk=%d rules=%d diagnostics=%d", len(c.rules.chunk), len(rules), len(diagnostics))
+	}
+	if !c.programs.warm {
+		t.Fatal("program arena not warm after first batch")
+	}
+
+	// Rule chunks keep exact sizing even when warm.
+	for range 4 {
+		next, _ := c.compile([]Source{{Data: []byte("x\n")}}, 1, defaultSourceBytes)
+		if len(next) != 1 || len(c.rules.chunk) != 1 {
+			t.Fatalf("rule chunk=%d rules=%d", len(c.rules.chunk), len(next))
+		}
+	}
+	if got := cap(c.programs.store); got > min(ruleBatch, c.programs.stored) {
+		t.Fatalf("warm store capacity=%d oversized for tiny history %d", got, c.programs.stored)
+	}
+
+	// A large history warms stores to at most one full batch.
+	big := newCompiler(false)
+	big.compile([]Source{{Data: []byte(strings.Repeat("r\n", 300))}}, 0, defaultSourceBytes)
+	if big.programs.stored != 300 {
+		t.Fatalf("stored=%d", big.programs.stored)
+	}
+	warm, _ := big.compile([]Source{{Data: []byte("z\n")}}, 1, defaultSourceBytes)
+	if got := cap(big.programs.store); got != min(ruleBatch, 300) {
+		t.Fatalf("warm store capacity=%d want=%d", got, min(ruleBatch, 300))
+	}
+
+	// Warm stores stay within one batch, and every handed-out program keeps
+	// exact capacity whatever its backing store.
+	compiled, _ := big.compile([]Source{{Data: []byte("[a-c]*.log\n**/deep/[x-z]/\n")}}, 2, defaultSourceBytes)
+	if cap(big.programs.store) > ruleBatch {
+		t.Fatalf("warm store capacity=%d exceeds one batch", cap(big.programs.store))
+	}
+	for _, batch := range [][]*Rule{rules, warm, compiled} {
+		for _, r := range batch {
+			if r.invalid {
+				continue
+			}
+			if cap(r.program) != len(r.program) {
+				t.Fatalf("program capacity=%d length=%d", cap(r.program), len(r.program))
+			}
+		}
+	}
+
+	// Replacing a warm store must not relocate or overwrite published programs.
+	a := newInstrArena(2)
+	first := a.add([]instruction{{text: "first"}})
+	a.warm = true
+	oversized := a.add(make([]instruction, ruleBatch+1))
+	if cap(a.store) != len(oversized) || first[0].text != "first" {
+		t.Fatal("warm oversized store changed earlier storage or gained spare capacity")
+	}
+}
+
 // TestBuilderSealedMatcherConcurrency exercises concurrent reads of the
 // published matcher alongside post-seal builder reads.
 func TestBuilderSealedMatcherConcurrency(t *testing.T) {

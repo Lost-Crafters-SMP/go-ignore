@@ -227,11 +227,18 @@ func (a *ruleArena) next() *Rule {
 // fits in one batch; starting another batch never copies earlier instructions
 // or invalidates their slices. Small sources use their remaining rule count
 // as the batch size; large sources bound normal batches at ruleBatch. A
-// program larger than a normal batch gets exactly the space it needs.
+// program larger than a normal batch gets exactly the space it needs. After
+// the first compilation batch, new stores cover as much work again as has
+// been stored so far, capped at one normal batch. Successive small additions
+// share storage without changing one-shot Compile sizing. Rule
+// chunks stay exact-sized: their larger slots make spare capacity a poor
+// trade against the few chunk objects it saves.
 type instrArena struct {
 	store    []instruction
 	scratch  []instruction
 	expected int
+	stored   int
+	warm     bool
 }
 
 func newInstrArena(expected int) instrArena {
@@ -241,6 +248,11 @@ func newInstrArena(expected int) instrArena {
 func (a *instrArena) add(prog []instruction) []instruction {
 	if len(prog) > cap(a.store)-len(a.store) {
 		size := max(len(prog), min(a.expected, ruleBatch))
+		if a.warm {
+			if floor := min(ruleBatch, a.stored); floor > size {
+				size = floor
+			}
+		}
 		a.store = make([]instruction, 0, size)
 	}
 	off := len(a.store)
@@ -248,6 +260,7 @@ func (a *instrArena) add(prog []instruction) []instruction {
 	if a.expected > 0 {
 		a.expected--
 	}
+	a.stored += len(prog)
 	return a.store[off:len(a.store):len(a.store)]
 }
 
@@ -436,6 +449,10 @@ func (c *compiler) compile(sources []Source, baseSeq int, capBytes int64) ([]*Ru
 		}
 	}
 	slices.SortStableFunc(rules, rulePriority)
+	// Mark the program arena warm only after the batch completes: the first
+	// batch (every one-shot Compile) keeps exact sizing, and later batches
+	// share generously sized program stores.
+	c.programs.warm = true
 	return rules, diagnostics
 }
 
