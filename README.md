@@ -97,6 +97,40 @@ and the traversal root itself remain the caller's concern: `Descend` follows
 performs no filesystem access or policy discovery, and a zero-value matcher
 descends everywhere.
 
+### Incremental compilation
+
+`NewBuilder` compiles lazily discovered sources once and keeps matching
+available between discoveries, so `Descend` can decide whether a directory is
+worth entering before its own sources are loaded:
+
+```go
+builder, err := ignore.NewBuilder(ignore.Options{})
+err = builder.Add([]ignore.Source{{
+    Label: ".gitignore", Rank: ignore.RankPerDirectory, Data: rootBytes,
+}})
+
+if _, descend, _ := builder.Descend("vendor"); descend {
+    // Enter the branch: load vendor's sources only when traversal reaches it.
+    err = builder.Add([]ignore.Source{{
+        Label: "vendor/.gitignore", Scope: "vendor",
+        Rank: ignore.RankPerDirectory, Data: vendorBytes,
+    }})
+}
+matcher, diagnostics := builder.Build() // optional: publish for concurrent use
+```
+
+After accepting sources s1…sn, the builder matches, descends and reports
+diagnostics exactly like `Compile` on the concatenated list; every accepted
+source compiles once and later batches never rewrite published rules. Failed
+additions change nothing, and error positions are cumulative. `Build` seals
+permanently, returns the existing compiled storage without recompilation or
+copying, and repeated calls return the same matcher with fresh detached
+diagnostics; reads keep working after sealing while every `Add` fails.
+Builders are not safe for concurrent use — external serialisation is the
+caller's — but the published matcher is. Scoped sources may stay loaded across
+sibling visits: scope eligibility keeps one branch's rules out of another
+branch's matches.
+
 ## Policy and traversal API
 
 ```go

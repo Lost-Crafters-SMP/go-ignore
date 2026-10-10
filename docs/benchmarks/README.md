@@ -12,6 +12,7 @@ Earlier measurements are within-library baselines, not current competitor rankin
 | --- | --- |
 | `core-windows.txt`, `core-linux.txt` | Core compilation and matching across rule counts and path depths |
 | `index-before.txt`, `index-after.txt` | Same-workload exhaustive versus indexed matching measurements |
+| `builder-windows.txt` | Incremental `Builder` construction, matching and retention against one-shot `Compile` |
 | `policy.txt` | Cold/warm discovery and walking |
 | `core-policy.txt` | Core and policy workloads, including deep chains |
 | `composition-before.txt`, `composition-after.txt`, `composition-warm.txt` | Per-directory composition and warm deep-chain measurements |

@@ -284,33 +284,111 @@ func countRules(data []byte) int {
 // Compile validates all inputs before compiling any source. Malformed rules are
 // retained as inert rules with diagnostics; oversized sources are wholly skipped.
 func Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error) {
-	capBytes := opts.MaxSourceBytes
+	capBytes, err := sourceCap(opts.MaxSourceBytes)
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := validateSources(sources, 0); err != nil {
+		return nil, nil, err
+	}
+	c := newCompiler(opts.CaseFold)
+	rules, diagnostics := c.compile(sources, 0, capBytes)
+	m := &Matcher{fold: opts.CaseFold, rules: rules, diagnostics: diagnostics}
+	m.buildIndex()
+	sortDiagnostics(m.diagnostics)
+	return m, m.Diagnostics(), nil
+}
+
+// sourceCap validates and resolves the per-source byte cap.
+func sourceCap(capBytes int64) (int64, error) {
 	if capBytes < 0 || capBytes > defaultSourceBytes {
-		return nil, nil, fmt.Errorf("source cap: %w", ErrInvalidInput)
+		return 0, fmt.Errorf("source cap: %w", ErrInvalidInput)
 	}
 	if capBytes == 0 {
 		capBytes = defaultSourceBytes
 	}
+	return capBytes, nil
+}
+
+// validateSources checks every source's scope and data, numbering error
+// positions from base so incremental batches report cumulative offsets. NUL
+// is rejected even in sources a size cap would skip.
+func validateSources(sources []Source, base int) error {
 	for i, source := range sources {
 		if err := validatePath(source.Scope, true); err != nil {
-			return nil, nil, fmt.Errorf("source %d scope: %w", i, err)
+			return fmt.Errorf("source %d scope: %w", base+i, err)
 		}
 		if slices.Contains(source.Data, byte(0)) {
-			return nil, nil, fmt.Errorf("source %d NUL: %w", i, ErrInvalidInput)
+			return fmt.Errorf("source %d NUL: %w", base+i, ErrInvalidInput)
 		}
 	}
+	return nil
+}
+
+// rulePriority orders rules ascending by rank, scope depth, source sequence
+// and physical line. Under that order the last matching rule wins, so
+// candidate scans run in reverse.
+func rulePriority(a, b *Rule) int {
+	if a.rank != b.rank {
+		if a.rank < b.rank {
+			return -1
+		}
+		return 1
+	}
+	if a.depth != b.depth {
+		if a.depth < b.depth {
+			return -1
+		}
+		return 1
+	}
+	if a.sequence != b.sequence {
+		if a.sequence < b.sequence {
+			return -1
+		}
+		return 1
+	}
+	if a.line != b.line {
+		if a.line < b.line {
+			return -1
+		}
+		return 1
+	}
+	return 0
+}
+
+// compiler accumulates rule and program storage across one or more source
+// batches. Compile uses a single batch; Builder reuses the arenas so accepted
+// sources are never parsed or compiled twice.
+type compiler struct {
+	fold     bool
+	rules    ruleArena
+	programs instrArena
+	scratch  []instruction
+}
+
+func newCompiler(fold bool) compiler {
+	return compiler{fold: fold}
+}
+
+// compile parses sources into priority-sorted rules, numbering them from
+// baseSeq. Oversized sources are wholly skipped with one diagnostic; malformed
+// patterns become inert rules with diagnostics. No index is built: callers
+// either merge the batch incrementally (Builder) or index the full rule set
+// once (Compile). Inputs must already be validated.
+func (c *compiler) compile(sources []Source, baseSeq int, capBytes int64) ([]*Rule, []Diagnostic) {
 	total := 0
 	for _, source := range sources {
 		if int64(len(source.Data)) <= capBytes {
 			total += countRules(source.Data)
 		}
 	}
-	m := &Matcher{fold: opts.CaseFold, rules: make([]*Rule, 0, total)}
-	rules := ruleArena{expected: total}
-	programs := newInstrArena(total)
+	c.rules.expected += total
+	c.programs.expected += total
+	rules := make([]*Rule, 0, total)
+	var diagnostics []Diagnostic
 	for seq, source := range sources {
 		if int64(len(source.Data)) > capBytes {
-			m.diagnostics = append(m.diagnostics, Diagnostic{Source: source.Label, Kind: OversizeSource, Message: "source exceeds byte cap"})
+			diagnostics = append(diagnostics, Diagnostic{Source: source.Label, Kind: OversizeSource, Message: "source exceeds byte cap"})
 			continue
 		}
 		data := strings.TrimPrefix(string(source.Data), "\xef\xbb\xbf")
@@ -322,13 +400,13 @@ func Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error) {
 				continue
 			}
 			text := trimSpaces(raw)
-			r := rules.next()
+			r := c.rules.next()
 			r.source = source.Label
 			r.scope = source.Scope
 			r.raw = raw
 			r.line = line
 			r.rank = source.Rank
-			r.sequence = seq
+			r.sequence = baseSeq + seq
 			if source.Scope != "" {
 				r.depth = strings.Count(source.Scope, "/") + 1
 			}
@@ -343,47 +421,22 @@ func Compile(sources []Source, opts Options) (*Matcher, []Diagnostic, error) {
 			r.pattern = text
 			r.anchored = strings.Contains(text, "/")
 			text = strings.TrimPrefix(text, "/")
-			prog, err := compilePatternBuf(programs.scratch[:0], text, opts.CaseFold)
+			prog, err := compilePatternBuf(c.scratch[:0], text, c.fold)
 			if err != nil {
 				r.invalid = true
-				m.diagnostics = append(m.diagnostics, Diagnostic{Source: source.Label, Line: line, Pattern: r.pattern, Kind: MalformedPattern, Message: err.Error()})
+				diagnostics = append(diagnostics, Diagnostic{Source: source.Label, Line: line, Pattern: r.pattern, Kind: MalformedPattern, Message: err.Error()})
 			} else {
-				programs.scratch = prog
-				r.program = programs.add(prog)
+				c.scratch = prog
+				r.program = c.programs.add(prog)
+				if !isLiteralProgram(r.program) {
+					r.head, r.tail = literalBounds(r.program)
+				}
 			}
-			m.rules = append(m.rules, r)
+			rules = append(rules, r)
 		}
 	}
-	slices.SortStableFunc(m.rules, func(a, b *Rule) int {
-		if a.rank != b.rank {
-			if a.rank < b.rank {
-				return -1
-			}
-			return 1
-		}
-		if a.depth != b.depth {
-			if a.depth < b.depth {
-				return -1
-			}
-			return 1
-		}
-		if a.sequence != b.sequence {
-			if a.sequence < b.sequence {
-				return -1
-			}
-			return 1
-		}
-		if a.line != b.line {
-			if a.line < b.line {
-				return -1
-			}
-			return 1
-		}
-		return 0
-	})
-	m.buildIndex()
-	sortDiagnostics(m.diagnostics)
-	return m, m.Diagnostics(), nil
+	slices.SortStableFunc(rules, rulePriority)
+	return rules, diagnostics
 }
 
 // sortDiagnostics orders diagnostics by source label, line and kind, with
@@ -448,7 +501,6 @@ func (m *Matcher) buildIndex() {
 		r.scopeID = gi
 		if !isLiteralProgram(r.program) {
 			m.wild = append(m.wild, r.idx)
-			r.head, r.tail = literalBounds(r.program)
 		}
 	}
 	// Presize the exact-match maps per scope to avoid repeated map growth.

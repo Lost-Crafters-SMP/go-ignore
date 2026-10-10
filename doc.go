@@ -17,6 +17,14 @@
 // Compile builds a per-scope literal index and a priority-ordered wildcard
 // list; ordinary short matches allocate nothing.
 //
+// NewBuilder constructs an incremental Builder that compiles each newly
+// discovered source once while Match, Descend and Diagnostics stay available
+// between additions; after accepting sources s1..sn in Add order it behaves
+// exactly like Compile on the concatenated list. Build seals the builder
+// permanently and publishes its existing compiled state as an immutable,
+// concurrently usable Matcher. Builders themselves require external
+// serialisation.
+//
 // NewPolicy layers named, ranked ignore sources over a fixed root with lazy
 // per-directory discovery, caching and reserved exclusions; its Walk prunes
 // the directories Git would not descend into (reserved paths, blocking

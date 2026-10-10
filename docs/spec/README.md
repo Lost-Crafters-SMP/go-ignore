@@ -8,7 +8,8 @@ fixtures; `manifest.json` records their counts and SHA-256 checksums.
 
 Module `go.lostcrafters.com/ignore`, root package `ignore`, stdlib-only runtime.
 `Compile` and `Matcher` provide pure byte-oriented matching, ordering, winning-rule
-metadata and diagnostics without filesystem I/O or subprocess execution. `Policy`
+metadata and diagnostics without filesystem I/O or subprocess execution; `Builder`
+compiles the same sources incrementally during lazy discovery. `Policy`
 and `Walk` provide optional filesystem discovery and traversal.
 
 Git is an **external executable oracle only**, not a code dependency. Compatibility
@@ -27,6 +28,28 @@ are project semantics and need independent tests rather than fabricated Git answ
   No partial matcher on API validation failure. Oversized sources are wholly
   skipped with one diagnostic, not partially compiled. Malformed patterns produce
   never-matching rules and diagnostics without aborting other lines.
+- `NewBuilder(opts Options) (*Builder, error)` validates options exactly like
+  Compile; a zero-value Builder adopts the default options. `(*Builder).Add`
+  validates and compiles one batch of sources, numbered after every previously
+  accepted source; after accepting s1..sn the builder's `Match`, `Descend` and
+  `Diagnostics` behave exactly like those of `Compile(s1..sn, opts)`, including
+  provenance and diagnostics ordering. Empty sources and wholly skipped
+  oversized sources still consume sequence positions. Scoped sources may be
+  added in any discovery order and stay loaded; scope eligibility keeps
+  sibling branches isolated. Whenever `Add` returns an error the builder is
+  unchanged, matching decisions, diagnostics, ordering and future additions
+  included; error positions are cumulative across batches, and NUL is checked
+  even in oversized sources. `Add(nil)` is a no-op on an open builder.
+- Builders are not safe for concurrent use and require external serialisation;
+  only the matcher published by `(*Builder).Build() (*Matcher, []Diagnostic)`
+  carries `Matcher`'s concurrent-use guarantee. `Build` seals permanently and
+  returns the builder's existing compiled storage — no recompilation, cloning
+  or copying, previously returned rules unchanged — with fresh detached
+  diagnostics on every call; repeated calls return the same matcher. Reads
+  remain available after sealing while every `Add`, including `Add(nil)`,
+  wraps `ErrInvalidInput`. An empty builder builds an empty matcher; a nil
+  builder errors on Add/Match/Descend, returns nil from Diagnostics and
+  (nil, nil) from Build.
 - `(*Matcher).Match(path string, isDir bool) (Decision, error)`, pure and safe
   for concurrent calls. Zero-value matcher is usable and empty; nil receiver
   returns an API error. No caller input mutation or shared mutable scratch.
@@ -57,7 +80,8 @@ are project semantics and need independent tests rather than fabricated Git answ
   kinds are `MalformedPattern` and `OversizeSource`. Invalid API inputs wrap
   `ErrInvalidInput`; diagnostic message text is not a stable contract.
 - Rank constants: global 100, info-exclude 200, per-directory 300, command 400.
-  Fixed ranks never include directory depth. There is no mutable builder.
+  Fixed ranks never include directory depth. Matcher state is immutable once
+  published; incremental compilation happens through `Builder` before `Build`.
 
 Match paths are nonempty clean slash-relative byte strings: reject leading/trailing
 slash, empty/`.`/`..` components and NUL. Backslash is a literal name byte, not an

@@ -26,6 +26,35 @@ never require growing or copying their backing arrays. Rule pointers stay stable
 for the matcher's lifetime. Deterministic diagnostics are returned as detached
 values, and caller source bytes are not retained or mutated.
 
+## Incremental compilation
+
+`builder.go` shares the parsing and program-compilation phase with `Compile`
+through `compiler`, which owns the rule and instruction arenas across batches so
+accepted sources are never parsed or compiled twice; one-shot `Compile` still
+builds its index in one bulk pass. `Builder.Add` validates a whole batch
+(cumulative error offsets, NUL even in oversized sources), checks cumulative
+source, rule and scope counts against index representation limits, and compiles
+the batch into unpublished storage. Only then does an infallible commit run:
+diagnostics are appended, new scopes are assigned stable IDs, the batch is
+spliced into the priority-ordered rule slice — appending when every new rule
+outranks the existing set — wildcard positions are remapped through a shift
+table, only the literal entries whose winners moved are repaired (in descending
+old-position order, so a moved winner's new position can never be mistaken for
+a shadowed rule's old position), and new literals update per-scope maps
+presized to the batch while anchored key-length bounds grow. Every `Add` error
+therefore leaves the matcher, diagnostics, source ordering and future
+additions untouched; malformed patterns stay nonfatal diagnostics, and no
+partial-update panic is converted into an ordinary error.
+
+Displaced rules keep their identity: no previously published `Rule` field is
+rewritten, so provenance returned earlier stays valid, and source bytes are
+owned after `Add` returns. Sibling scopes stay loaded in one matcher while
+scope eligibility isolates their rules. `Diagnostics` sorts the cumulative
+slice when new entries arrive; stable sorting makes that order identical to a
+one-shot sort of the same append sequence. `Build` seals the state shared by
+every copy of a handle, drops compilation scratch and bookkeeping, and returns
+the existing matcher storage as an immutable, concurrently usable `Matcher`.
+
 ## Priority and candidate selection
 
 Rules are sorted by `(rank, scope depth, source sequence, physical line)`; the
@@ -113,7 +142,11 @@ rules for consumers that own their traversal. See the
 
 Specification fixtures assert actions, winning-rule metadata and blocks. A slow
 reference, exhaustive-index differential tests, composition models, fuzz corpora,
-filesystem tests and concurrent-use tests guard the implementation. Live Git
+filesystem tests and concurrent-use tests guard the implementation. Builder
+tests verify exact equivalence with cumulative one-shot compilation after every
+addition — decisions, descent verdicts, diagnostics and provenance — beside
+lifecycle, ownership, fault-injected error atomicity and concurrent reads of the
+published matcher. Live Git
 tests exercise an isolated external executable, including layered sources; custom
 ranks and reserved paths use library-contract tests rather than Git assertions.
 Killable adversarial tests bound work and verify retained memory and source caps.
