@@ -89,13 +89,17 @@ err = policy.Walk("subtree", func(rel string, isDir bool, d ignore.PolicyDecisio
 `PolicyDecision` embeds `Decision` (winning source label, line, blocking
 ancestor) plus `Reserved`. Discovery is lazy and cached per directory for the
 Policy's lifetime; the first error per directory is returned deterministically.
-`Walk` prunes ignored/reserved directories after reporting them, honours
+`Walk` prunes exactly the directories Git would not descend into (reserved
+paths, directories blocked by an excluded strict ancestor, and directories
+excluded by their own bare-directory decision) after reporting them, honours
 `filepath.SkipDir`, aborts on the first I/O or discovery error, never follows
 symlinks and treats ignore source files as ordinary candidates. Traversal roots
 may be any subtree; the policy namespace stays root-relative.
 
-`Walk` prunes canonical directory endpoint exclusions, even when they are not
-strict-ancestor blocks. Under `bin/*` followed by `!bin/keep`, it may prune `bin/`
-and omit a child that pure matching includes. This differs from `git status`
-traversal; see the [documented comparison](bench/README.md#correctness-verification).
-`MatchPath` containment is lexical, not a security boundary against symlink escapes.
+A directory excluded only by its canonical slash-form decision (its contents
+rather than itself, such as `bin/*` matching `bin/`) remains traversable, so
+`bin/*` followed by `!bin/keep` discovers `bin/keep` exactly as `git status`
+does. The decision reported for such a directory is still its canonical
+slash-form `Match` result; matching and traversal blocking are distinct
+contracts. `MatchPath` containment is lexical, not a security boundary
+against symlink escapes.

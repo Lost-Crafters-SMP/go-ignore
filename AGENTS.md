@@ -2,7 +2,7 @@
 
 - This is a standalone Git-compatible ignore matching library module, `go.lostcrafters.com/ignore`, not an application. The root package is `ignore`. `docs/spec/` contains the behavioural specification, API contracts and regression fixtures; `docs/design.md` describes the implemented architecture. Comparative benchmark methodology and results are in `bench/README.md`.
 - Keep library code at the module root; introduce subpackages only as needed (see `README.md`). `go.work` is ignored and is not part of the shared setup.
-- Preserve byte-exact gitignore semantics, winning-rule metadata and blocking ancestors, fixed ranks independent of scope depth, nested policies and pruning traversal. Match's canonical slash-form directory exclusion alone is not a strict-ancestor block; Walk nevertheless prunes ignored directory endpoints as documented. The Git executable is a black-box behavioural reference, never a source-code template. Custom-rank semantics are library-specific, not Git-oracle claims.
+- Preserve byte-exact gitignore semantics, winning-rule metadata and blocking ancestors, fixed ranks independent of scope depth, nested policies and pruning traversal. Match's canonical slash-form directory exclusion alone is neither a strict-ancestor block nor a traversal block; Walk prunes only where Git descends no further (reserved paths, blocking ancestors, bare-directory self-exclusions). The Git executable is a black-box behavioural reference, never a source-code template. Custom-rank semantics are library-specific, not Git-oracle claims.
 
 ## Licence and implementation
 

@@ -221,16 +221,29 @@ Do not conflate slash/no-slash directory arguments or case-folding modes.
   supports concurrent matching, diagnostics and walking.
 - `Walk(start, callback)` accepts a root-relative subtree (including `""`) or an
   absolute subtree inside the root. Paths passed to the callback remain
-  policy-root-relative. The traversal root is not reported. Entries are visited
+  policy-root-relative. The traversal root is not reported; if traversal of it
+  is blocked (reserved, blocked by an excluded strict ancestor, or excluded by
+  its own bare-directory decision) nothing is visited. Entries are visited
   lexicographically; symlinks are reported as non-directories and never followed.
-  Source files are ordinary candidates. Ignored/reserved directories are reported
-  and then pruned. `filepath.SkipDir` is honored; other callback errors abort
-  unchanged, and filesystem/discovery errors abort with path context.
+  Source files are ordinary candidates. Pruned directories are reported and then
+  pruned. `filepath.SkipDir` is honored; other callback errors abort unchanged,
+  and filesystem/discovery errors abort with path context.
 
-`Walk` deliberately prunes canonical endpoint exclusions as well as blocks. For
-`bin/*` followed by `!bin/keep`, this can prune `bin/` even though pure matching
-can include the child. It agrees with the slash-form `check-ignore` verdict, not
-necessarily `git status` traversal. See the [benchmark methodology](../../bench/README.md#correctness-verification).
+Traversal pruning follows Git's descent rule, not the canonical directory
+endpoint verdict. A directory is pruned when it is reserved, when a strict
+ancestor is excluded, or when its own bare-directory decision is a positive
+exclusion (including directory-only patterns): conditions under which Git
+never descends and no deeper negation can re-include anything. A directory
+excluded only in canonical slash form (its contents rather than itself, such
+as `bin/*` matching `bin/`) remains traversable: `bin/*` followed by
+`!bin/keep` visits `bin`, reports its ignored children and re-included
+`bin/keep`, matching `git status` traversal, while the decision reported for
+`bin` itself remains the canonical slash-form result (excluded by `bin/*`).
+Canonical directory matching and traversal blocking are distinct contracts.
+File discovery is verified against real Git traversal (`git status
+--ignored=matching -uall` and `git ls-files --cached --others
+--exclude-standard`) in the live Git and benchmark correctness tests. See the
+[benchmark methodology](../../bench/README.md#correctness-verification).
 
 ## Regression and resource requirements
 

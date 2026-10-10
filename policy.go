@@ -181,11 +181,22 @@ func (p *Policy) isReserved(rel string) bool {
 // structural — every chain scope is a prefix directory of the query — so
 // the ancestor-blocking scan compares depths, not bytes.
 func (p *Policy) Match(rel string, isDir bool) (PolicyDecision, error) {
+	d, _, err := p.decide(rel, isDir)
+	return d, err
+}
+
+// decide is the shared evaluation behind Match and Walk. Beyond the decision,
+// it reports bareExclude: for a directory endpoint without a block, the
+// bare-directory winner is a positive exclusion and therefore supplies the
+// endpoint decision. That is exactly the condition under which Git declines
+// to descend into a directory; a canonical slash-form exclusion alone is not,
+// because deeper negations may still re-include the directory's children.
+func (p *Policy) decide(rel string, isDir bool) (d PolicyDecision, bareExclude bool, err error) {
 	if err := validatePath(rel, false); err != nil {
-		return PolicyDecision{}, fmt.Errorf("path: %w", err)
+		return PolicyDecision{}, false, fmt.Errorf("path: %w", err)
 	}
 	if p.isReserved(rel) {
-		return PolicyDecision{Decision: Decision{Action: Exclude}, Reserved: true}, nil
+		return PolicyDecision{Decision: Decision{Action: Exclude}, Reserved: true}, false, nil
 	}
 	dir := ""
 	if at := strings.LastIndexByte(rel, '/'); at >= 0 {
@@ -193,7 +204,7 @@ func (p *Policy) Match(rel string, isDir bool) (PolicyDecision, error) {
 	}
 	state, err := p.matcherFor(dir)
 	if err != nil {
-		return PolicyDecision{}, err
+		return PolicyDecision{}, false, err
 	}
 	var scratch evalScratch
 	// Ancestor blocking: prefixes ascend, and the first prefix whose
@@ -218,7 +229,7 @@ func (p *Policy) Match(rel string, isDir bool) (PolicyDecision, error) {
 			}
 		}
 		if best != nil && !best.negated {
-			return PolicyDecision{Decision: Decision{Block: &Block{Directory: prefix, Rule: best}}}, nil
+			return PolicyDecision{Decision: Decision{Block: &Block{Directory: prefix, Rule: best}}}, false, nil
 		}
 		start = at + 1
 	}
@@ -233,23 +244,26 @@ func (p *Policy) Match(rel string, isDir bool) (PolicyDecision, error) {
 			r = cand
 		}
 	}
-	if isDir && (r == nil || r.negated) {
-		// The canonical slash-form evaluation replaces the bare result.
-		r = nil
-		for s := state; s != nil; s = s.parent {
-			if cand := s.matcher.scanWinner(rel, true, true, &scratch); cand != nil && (r == nil || ruleOutranks(cand, r)) {
-				r = cand
+	if isDir {
+		bareExclude = r != nil && !r.negated
+		if !bareExclude {
+			// The canonical slash-form evaluation replaces the bare result.
+			r = nil
+			for s := state; s != nil; s = s.parent {
+				if cand := s.matcher.scanWinner(rel, true, true, &scratch); cand != nil && (r == nil || ruleOutranks(cand, r)) {
+					r = cand
+				}
 			}
 		}
 	}
 	if r == nil {
-		return PolicyDecision{}, nil
+		return PolicyDecision{}, bareExclude, nil
 	}
 	action := Exclude
 	if r.negated {
 		action = Include
 	}
-	return PolicyDecision{Decision: Decision{Action: action, Rule: r}}, nil
+	return PolicyDecision{Decision: Decision{Action: action, Rule: r}}, bareExclude, nil
 }
 
 // ruleOutranks reports whether a has strictly higher matching priority than

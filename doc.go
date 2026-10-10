@@ -15,7 +15,9 @@
 //
 // NewPolicy layers named, ranked ignore sources over a fixed root with lazy
 // per-directory discovery, caching and reserved exclusions; its Walk prunes
-// ignored and reserved directories and never follows symlinks. The core
+// the directories Git would not descend into (reserved paths, blocking
+// ancestors and bare-directory self-exclusions, never a canonical
+// slash-form contents exclusion alone) and never follows symlinks. The core
 // matcher stays usable without policy or walker overhead.
 //
 // The behavioural specification and regression fixtures are in docs/spec/.

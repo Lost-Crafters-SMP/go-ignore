@@ -134,80 +134,84 @@ func TestPairEquivalence(t *testing.T) {
 	}
 }
 
-// TestWalkerEquivalence compares full-traversal entry sets on the walk
-// benchmarks' trees. go-ignore reports ignored directories before pruning
-// them and reports the reserved .git directory, so both are filtered for
-// the comparison; git-pkgs never reports ignored or .git entries.
+// TestWalkerEquivalence verifies the walker's included-file discovery
+// against Git's own traversal on the walk benchmarks' trees, with the
+// competitor walker as a secondary cross-check.
 //
-// One semantic corner is expected and verified against the oracle rather
-// than failed: a directory excluded only through a non-dirOnly slash
-// pattern (for example "bin/*") is pruned by go-ignore's walker, which
-// follows check-ignore's trailing-slash directory verdict, while git-pkgs
-// descends into it the way `git status` traversal does. For those
-// directories Git itself is inconsistent between its two interfaces:
-// check-ignore says "bin" is not ignored and "bin/" is ignored, and
-// git status descends. Divergences outside this verified corner fail.
+// The authoritative oracle is `git ls-files --cached --others
+// --exclude-standard` minus `git ls-files --cached --ignored
+// --exclude-standard`: every file Git's traversal discovers as not
+// ignored (tracked files plus untracked files surviving the exclude
+// stack, less tracked files the rules themselves exclude, which git keeps
+// by index precedence but a rule-matching walker has no index for), minus
+// the reserved .git namespace. The walker must discover
+// exactly that set: it prunes precisely where Git prunes (reserved
+// paths, excluded strict ancestors and bare-directory self-exclusions)
+// and descends through directories excluded only in canonical slash form
+// (contents globs such as bin/*), exactly as git status traversal does. A
+// wrongly pruned directory therefore shows up as missing files. The
+// slash-form corner this test once accepted (go-ignore pruning
+// directories that git status descends into) fails this oracle now.
+//
+// Directory entries are deliberately not compared. go-ignore reports
+// every traversable directory, including report-then-prune for blocked
+// ones, with the canonical slash-form decision of its documented API;
+// git-pkgs silently skips ignored directories and has no canonical
+// directory semantics. Those callback semantics are verified against Git
+// itself (check-ignore and git status) by the main module's differential
+// tests, not by cross-library entry-set equality.
 func TestWalkerEquivalence(t *testing.T) {
 	for _, name := range []string{"nested-d8", "moby"} {
 		t.Run(name, func(t *testing.T) {
 			tree := mustTree(t, name)
-			goSet := map[string]bool{}
+			goFiles := map[string]bool{}
 			err := warmPolicyOnce(t, tree).Walk("", func(rel string, isDir bool, d ignore.PolicyDecision) error {
-				if !d.Ignored() && rel != ".git" {
-					goSet[rel] = isDir
+				if !isDir && !d.Ignored() && rel != ".git" {
+					goFiles[rel] = true
 				}
 				return nil
 			})
 			if err != nil {
 				t.Fatal(err)
 			}
-			pkgSet := map[string]bool{}
+			cache, err := dataset.CacheDir()
+			if err != nil {
+				t.Fatal(err)
+			}
+			gitFiles, err := oracle.ListNonIgnored(tree.Root, cache)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if onlyGo := diffSets(goFiles, gitFiles); len(onlyGo) > 0 {
+				t.Errorf("walker discovered %d files Git traversal did not: %s", len(onlyGo), firstN(onlyGo, 5))
+			}
+			if missed := diffSets(gitFiles, goFiles); len(missed) > 0 {
+				t.Errorf("walker missed %d files Git traversal discovered: %s", len(missed), firstN(missed, 5))
+			}
+			t.Logf("included files go-ignore=%d git=%d", len(goFiles), len(gitFiles))
+
+			// Secondary cross-check: the competitor walker discovers the
+			// same included files. Files have no directory-form split, so
+			// library-specific directory conventions cannot mask a real
+			// discovery divergence here.
+			pkgFiles := map[string]bool{}
 			err = gitpkgs.Walk(tree.Root, func(path string, d fs.DirEntry) error {
-				pkgSet[filepath.ToSlash(path)] = d.IsDir()
+				if !d.IsDir() {
+					pkgFiles[filepath.ToSlash(path)] = true
+				}
 				return nil
 			})
 			if err != nil {
 				t.Fatal(err)
 			}
-			onlyGo := diffSets(goSet, pkgSet)
-			if len(onlyGo) > 0 {
-				t.Errorf("go-ignore visited %d entries git-pkgs did not: %s", len(onlyGo), firstN(onlyGo, 5))
+			if onlyGo := diffSets(goFiles, pkgFiles); len(onlyGo) > 0 {
+				t.Errorf("go-ignore discovered %d files git-pkgs did not: %s", len(onlyGo), firstN(onlyGo, 5))
 			}
-			var corner, unexplained []string
-			for _, p := range diffSets(pkgSet, goSet) {
-				if isSlashFormCorner(t, tree, p) {
-					corner = append(corner, p)
-					continue
-				}
-				unexplained = append(unexplained, p)
-			}
-			t.Logf("entries go-ignore=%d git-pkgs=%d onlyGo=%d slashFormCorner=%d unexplained=%d",
-				len(goSet), len(pkgSet), len(onlyGo), len(corner), len(unexplained))
-			if len(corner) > 0 {
-				t.Logf("  slash-form corner (go-ignore prunes, git-pkgs descends): %s", firstN(corner, 5))
-			}
-			if len(unexplained) > 0 {
-				t.Errorf("unexplained walker divergences: %s", firstN(unexplained, 5))
+			if missed := diffSets(pkgFiles, goFiles); len(missed) > 0 {
+				t.Errorf("go-ignore missed %d files git-pkgs discovered: %s", len(missed), firstN(missed, 5))
 			}
 		})
 	}
-}
-
-// isSlashFormCorner reports whether path is a directory that Git classifies
-// as not-ignored without a trailing slash but ignored with one: the case
-// where go-ignore's slash-form walker convention and git status traversal
-// legitimately disagree.
-func isSlashFormCorner(t *testing.T, tree dataset.Tree, path string) bool {
-	t.Helper()
-	cache, err := dataset.CacheDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	plain, slash, err := oracle.CheckDirForms(tree.Root, cache, path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return !plain && slash
 }
 
 // TestRankAndReservedEquivalence verifies the Tier 3 configurations that

@@ -87,16 +87,21 @@ root-relative filenames and report each discovered source once.
 
 `walker.go` performs sequential, lexicographically ordered traversal of a selected
 subtree while keeping callback paths policy-root-relative. It does not report
-the traversal root or follow symlinks. It reports ignored/reserved directories
-before pruning them, honors `filepath.SkipDir`, and aborts on the first other
+the traversal root or follow symlinks. It reports pruned directories before
+pruning them, honors `filepath.SkipDir`, and aborts on the first other
 callback, filesystem or discovery error. Source files are ordinary candidates.
 Directory decisions consult parent scopes, not that directory's own sources.
 
-Pruning includes canonical endpoint exclusions, not only strict-ancestor blocks.
-Consequently `bin/*` with `!bin/keep` can omit an includable child, unlike
-`git status` traversal. This existing contract and its measured comparison are
-documented in the [specification](spec/README.md#filesystem-policy-and-traversal)
-and [benchmark methodology](../bench/README.md#correctness-verification).
+Pruning follows Git's descent rule: a directory is pruned when reserved, blocked
+by an excluded strict ancestor, or excluded by its own bare-directory decision,
+which the shared evaluation in `policy.go` (`decide`) computes alongside the
+canonical decision at no extra matching cost. A canonical slash-form exclusion
+alone (contents excluded, the directory itself not) leaves the directory
+traversable, so `bin/*` with `!bin/keep` discovers the child exactly as
+`git status` does, while the decision reported for `bin/` remains the canonical
+slash-form result. See the
+[specification](spec/README.md#filesystem-policy-and-traversal) and
+[benchmark methodology](../bench/README.md#correctness-verification).
 
 ## Tests and measurements
 

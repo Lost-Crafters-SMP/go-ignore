@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -331,13 +332,15 @@ func TestLiveGitLayeredPolicy(t *testing.T) {
 	}
 }
 
-// TestLiveGitWalkerPruning checks the walker end to end: the visited set
-// equals the full enumeration minus descendants of Git-ignored directories,
-// and every reported decision agrees with Git for that path.
+// TestLiveGitWalkerPruning checks the walker end to end against real Git
+// filesystem traversal: the files the walker discovers equal the files
+// `git status --porcelain --ignored=matching -uall` lists, directories are
+// pruned exactly where Git collapses them to a `!! dir/` entry, and every
+// reported decision agrees with Git's check-ignore verdict for that path.
 func TestLiveGitWalkerPruning(t *testing.T) {
 	requireLiveGit(t)
 	files := map[string]string{
-		".gitignore":     "*.log\n!keep.log\ntmp/\nvendor/\n",
+		".gitignore":     "*.log\n!keep.log\ntmp/\nvendor/\n/wild/*\n!/wild/keep.txt\n!deny\ndeny/*\n!deny/keep.txt\n/locked/\n!/locked/keep.txt\n/span/**\n!/span/keep\nout/\n",
 		"src/.gitignore": "!local.log\n",
 		"docs/guide.md":  "",
 		"src/main.go":    "",
@@ -351,9 +354,60 @@ func TestLiveGitWalkerPruning(t *testing.T) {
 		"plain.bak":      "",
 		"top.log":        "",
 		"deep/a/b/c.log": "",
+		// wild/ and deny/ are excluded only in canonical slash form
+		// (their contents, not themselves): Git traverses them and their
+		// re-included keep.txt files must be discovered. Nested sources
+		// beneath wild/ stay effective: !special outranks the root glob
+		// by depth and shrine/ prunes one level deeper.
+		"wild/keep.txt":   "",
+		"wild/drop.txt":   "",
+		"wild/.gitignore": "!special\nshrine/\n",
+		"wild/special":    "",
+		"wild/shrine/x":   "",
+		"deny/keep.txt":   "",
+		"deny/drop.txt":   "",
+		"locked/keep.txt": "",
+		"locked/drop.txt": "",
+		"span/keep":       "",
+		"span/sub/g":      "",
+		"a/.gitignore":    "!out/\n",
+		"a/b/.gitignore":  "out/\n",
+		"a/top":           "",
+		"a/out/f":         "",
+		"a/b/out/f":       "",
 	}
 	o := newLayeredOracle(t, files, "*.bak\n", "secret-*\n", false)
 	checkLiveGitWalker(t, o)
+}
+
+// statusTraversal runs a real `git status --porcelain --ignored=matching
+// -uall -z` traversal and splits its output into the files Git discovered
+// and the directories Git refused to descend into (Git collapses those to a
+// single trailing-slash entry). This is the traversal oracle for the walker;
+// check-ignore remains the oracle for per-path decisions.
+func (o *oracle) statusTraversal(t *testing.T) (files, prunedDirs map[string]bool) {
+	t.Helper()
+	data, _ := o.command(t, "", false, "status", "--porcelain", "--ignored=matching", "-uall", "-z")
+	files = make(map[string]bool)
+	prunedDirs = make(map[string]bool)
+	for _, rec := range strings.Split(strings.TrimRight(string(data), "\x00"), "\x00") {
+		if rec == "" {
+			continue
+		}
+		if len(rec) < 4 || rec[2] != ' ' || rec[0] == '?' && rec[1] != '?' || rec[0] == '!' && rec[1] != '!' {
+			t.Fatalf("unexpected status record %q", rec)
+		}
+		path := rec[3:]
+		if strings.HasSuffix(path, "/") {
+			prunedDirs[strings.TrimSuffix(path, "/")] = true
+		} else {
+			files[path] = true
+		}
+	}
+	if len(files) == 0 {
+		t.Fatal("empty status traversal")
+	}
+	return files, prunedDirs
 }
 
 func checkLiveGitWalker(t *testing.T, o *layeredOracle) {
@@ -402,17 +456,48 @@ func checkLiveGitWalker(t *testing.T, o *layeredOracle) {
 		t.Fatal("empty enumeration")
 	}
 
-	ignored := make(map[string]bool, len(all))
-	for _, e := range all {
-		query := e.rel
-		if e.isDir {
-			query += "/"
+	// The traversal oracle: which files Git really discovers, and which
+	// directories it refuses to descend into.
+	gitFiles, gitPruned := o.statusTraversal(t)
+
+	visitedFiles := map[string]bool{}
+	visitedDirs := map[string]bool{}
+	decisions := map[string]PolicyDecision{}
+	err = p.Walk("", func(rel string, isDir bool, d PolicyDecision) error {
+		if isDir {
+			visitedDirs[rel] = true
+		} else {
+			visitedFiles[rel] = true
 		}
-		ignored[e.rel] = o.query(t, query).Ignored
+		decisions[rel] = d
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
-	want := map[string]bool{".git": true}
+
+	// The walker discovers exactly the files Git's traversal discovers:
+	// nothing less (re-includable children must not be missed) and nothing
+	// more (pruned subtrees must not be entered).
+	if len(visitedFiles) != len(gitFiles) {
+		t.Fatalf("walker visited %d files, git status discovered %d:\nwalker=%v\ngit=%v",
+			len(visitedFiles), len(gitFiles), sortedKeys(visitedFiles), sortedKeys(gitFiles))
+	}
+	for path := range gitFiles {
+		if !visitedFiles[path] {
+			t.Fatalf("git status discovered %q but the walker did not", path)
+		}
+	}
+
+	// Directory pruning matches Git's descent decisions exactly: every
+	// pruned directory is reported and then pruned, and no directory below
+	// a pruned one is entered. Remaining directories are structural and
+	// must all be traversable. wantAll additionally keeps the visited
+	// files, for the per-entry decision comparisons below.
+	wantDirs := map[string]bool{".git": true}
+	wantAll := map[string]bool{".git": true}
 	for _, e := range all {
-		visited := true
+		blocked := false
 		rest := e.rel
 		for {
 			at := strings.LastIndexByte(rest, '/')
@@ -420,67 +505,78 @@ func checkLiveGitWalker(t *testing.T, o *layeredOracle) {
 				break
 			}
 			parent := rest[:at]
-			if parent == ".git" || ignored[parent] {
-				visited = false
+			if parent == ".git" || gitPruned[parent] {
+				blocked = true
 				break
 			}
 			rest = parent
 		}
-		if visited {
-			want[e.rel] = true
+		if blocked {
+			continue
+		}
+		wantAll[e.rel] = true
+		if e.isDir {
+			wantDirs[e.rel] = true
 		}
 	}
-
-	var visited []string
-	decisions := map[string]PolicyDecision{}
-	err = p.Walk("", func(rel string, _ bool, d PolicyDecision) error {
-		visited = append(visited, rel)
-		decisions[rel] = d
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
+	if len(visitedDirs) != len(wantDirs) {
+		t.Fatalf("walker visited %d directories want %d:\nwalker=%v\nwant=%v\ngit-pruned=%v",
+			len(visitedDirs), len(wantDirs), sortedKeys(visitedDirs), sortedKeys(wantDirs), sortedKeys(gitPruned))
 	}
-	if len(visited) != len(want) {
-		t.Fatalf("walker visited %d want %d: visited=%v want=%v", len(visited), len(want), visited, boolKeys(want))
+	for rel := range wantDirs {
+		if !visitedDirs[rel] {
+			t.Fatalf("expected directory visit %q", rel)
+		}
 	}
-	for _, rel := range visited {
-		if !want[rel] {
-			t.Fatalf("unexpected visit %q", rel)
+	for rel := range gitPruned {
+		if rel == ".git" {
+			continue
+		}
+		if !visitedDirs[rel] {
+			t.Fatalf("git-pruned directory %q not reported", rel)
 		}
 	}
 	if !decisions[".git"].Reserved {
 		t.Fatalf("reserved .git decision %+v", decisions[".git"])
 	}
+
+	// Every reported decision agrees with Git's check-ignore verdict for
+	// that path (canonical slash-form queries for directories).
 	for _, e := range all {
-		if !want[e.rel] {
+		if !wantAll[e.rel] {
 			continue
 		}
 		d := decisions[e.rel]
-		if d.Ignored() != ignored[e.rel] {
-			t.Fatalf("decision %q library=%+v git-ignored=%v", e.rel, d, ignored[e.rel])
-		}
-		if e.rel == ".git" {
-			continue
-		}
 		query := e.rel
 		if e.isDir {
 			query += "/"
 		}
+		if d.Ignored() != o.query(t, query).Ignored {
+			t.Fatalf("decision %q library=%+v git-mismatch", e.rel, d)
+		}
+		if e.rel == ".git" {
+			continue
+		}
 		checkPolicyRecord(t, o, d, o.query(t, query))
 	}
 	// The traversal root itself is never reported.
-	for _, rel := range visited {
+	for rel := range visitedFiles {
+		if rel == "" {
+			t.Fatal("traversal root reported")
+		}
+	}
+	for rel := range visitedDirs {
 		if rel == "" {
 			t.Fatal("traversal root reported")
 		}
 	}
 }
 
-func boolKeys(m map[string]bool) []string {
+func sortedKeys(m map[string]bool) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
 		out = append(out, k)
 	}
+	slices.Sort(out)
 	return out
 }

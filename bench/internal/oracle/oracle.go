@@ -47,38 +47,57 @@ func HygieneFiles(cache string) ([]string, error) {
 	return env, nil
 }
 
-// CheckDirForms returns Git's ignore verdict for one existing directory,
-// queried both without and with a trailing slash. Git's interfaces can
-// disagree on directories excluded only through non-dirOnly slash patterns
-// ("bin/*"): check-ignore without the slash says not ignored, with it says
-// ignored, and git status traversal descends. This exposes that tear.
-func CheckDirForms(dir, cache, path string) (plain, slash bool, err error) {
+// ListNonIgnored returns every file a purely rule-based traversal of dir
+// discovers as not ignored, using Git's own machinery: tracked files plus
+// untracked files surviving the exclude stack, minus tracked files that the
+// ignore rules themselves exclude. Git keeps tracked files regardless of
+// ignore rules, but a rule-matching walker has no index and must judge them
+// by the rules, so subtracting `ls-files --cached --ignored` gives the
+// discovery semantics a walker can be held to. The .git namespace is
+// excluded. It is the whole-tree traversal oracle for file discovery: a
+// walker that prunes exactly where Git prunes lands on precisely this set,
+// so a wrongly pruned directory shows up as missing files.
+func ListNonIgnored(dir, cache string) (map[string]bool, error) {
 	env, err := HygieneFiles(cache)
 	if err != nil {
-		return false, false, err
+		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "git", "check-ignore", "-z", "--stdin")
-	cmd.Dir = dir
-	cmd.Env = env
-	cmd.Stdin = strings.NewReader(path + "\x00" + path + "/\x00")
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	out, err := cmd.Output()
+	run := func(args ...string) ([]byte, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, "git", args...)
+		cmd.Dir = dir
+		cmd.Env = env
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		out, err := cmd.Output()
+		if err != nil {
+			return nil, fmt.Errorf("git %v: %w stderr=%s", args, err, stderr.String())
+		}
+		return out, nil
+	}
+	discovered, err := run("ls-files", "-z", "--cached", "--others", "--exclude-standard")
 	if err != nil {
-		var exit *exec.ExitError
-		if !errors.As(err, &exit) || exit.ExitCode() != 1 {
-			return false, false, fmt.Errorf("git check-ignore: %w stderr=%s", err, stderr.String())
-		}
+		return nil, err
 	}
-	ignored := map[string]bool{}
-	for _, p := range strings.Split(strings.TrimSuffix(string(out), "\x00"), "\x00") {
+	ruleIgnored, err := run("ls-files", "-z", "--cached", "--ignored", "--exclude-standard")
+	if err != nil {
+		return nil, err
+	}
+	skip := make(map[string]bool)
+	for _, p := range strings.Split(strings.TrimSuffix(string(ruleIgnored), "\x00"), "\x00") {
 		if p != "" {
-			ignored[p] = true
+			skip[p] = true
 		}
 	}
-	return ignored[path], ignored[path+"/"], nil
+	files := make(map[string]bool)
+	for _, p := range strings.Split(strings.TrimSuffix(string(discovered), "\x00"), "\x00") {
+		if p == "" || p == ".git" || strings.HasPrefix(p, ".git/") || skip[p] {
+			continue
+		}
+		files[p] = true
+	}
+	return files, nil
 }
 
 // Version reports the git binary version.

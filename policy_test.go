@@ -434,13 +434,14 @@ type walkRecord struct {
 	rel   string
 	isDir bool
 	d     PolicyDecision
+	bare  bool
 }
 
 func collectWalk(t *testing.T, p *Policy, traverse string) ([]walkRecord, error) {
 	t.Helper()
 	var got []walkRecord
 	err := p.Walk(traverse, func(rel string, isDir bool, d PolicyDecision) error {
-		got = append(got, walkRecord{rel, isDir, d})
+		got = append(got, walkRecord{rel: rel, isDir: isDir, d: d})
 		return nil
 	})
 	return got, err
@@ -522,7 +523,8 @@ func keysOf(m map[string]PolicyDecision) []string {
 }
 
 // walkAll enumerates every descendant of root without pruning, computing
-// decisions through Match — the enumerator differential for the walker.
+// decisions and bare-exclusion flags through decide, the enumerator
+// differential for the walker.
 func walkAll(t *testing.T, p *Policy, traverse string) []walkRecord {
 	t.Helper()
 	var out []walkRecord
@@ -539,11 +541,11 @@ func walkAll(t *testing.T, p *Policy, traverse string) []walkRecord {
 			return err
 		}
 		rel = filepath.ToSlash(rel)
-		d, err := p.Match(rel, entry.IsDir())
+		d, bare, err := p.decide(rel, entry.IsDir())
 		if err != nil {
 			return err
 		}
-		out = append(out, walkRecord{rel, entry.IsDir(), d})
+		out = append(out, walkRecord{rel: rel, isDir: entry.IsDir(), d: d, bare: bare})
 		return nil
 	})
 	if err != nil {
@@ -555,7 +557,7 @@ func walkAll(t *testing.T, p *Policy, traverse string) []walkRecord {
 func TestPolicyWalkerEquivalence(t *testing.T) {
 	root := t.TempDir()
 	writeTree(t, root, map[string]string{
-		".gitignore":     "*.log\n!keep.log\ntmp/\n",
+		".gitignore":     "*.log\n!keep.log\ntmp/\n/star/*\n!/star/keep.txt\n!neg\nneg/*\n!neg/keep.txt\n",
 		"a/.gitignore":   "!special.log\n",
 		"a/b/.gitignore": "*.tmp\n",
 		"a/b/tmp/":       "",
@@ -568,12 +570,19 @@ func TestPolicyWalkerEquivalence(t *testing.T) {
 		"c/.gitignore":   "everything\n",
 		"c/thing":        "",
 		"c/sub/thing":    "",
+		"star/keep.txt":  "",
+		"star/drop.txt":  "",
+		"neg/keep.txt":   "",
+		"neg/drop.txt":   "",
 		"top.log":        "",
 		"keep.log":       "",
 	})
 	p := testPolicy(t, root, []SourceSpec{{Filename: ".gitignore", Rank: RankPerDirectory, Optional: true, Nested: true}})
 	all := walkAll(t, p, "")
-	// Expected walker visits: everything except descendants of ignored dirs.
+	// Expected walker visits: everything except descendants of directories
+	// whose descent Git would block: reserved, blocked or bare-excluded
+	// directories. Canonical slash-form-only exclusions (star/*, neg/*)
+	// must keep their subtrees discoverable.
 	want := map[string]bool{}
 	pruned := ""
 	for _, rec := range all {
@@ -582,7 +591,7 @@ func TestPolicyWalkerEquivalence(t *testing.T) {
 		}
 		pruned = ""
 		want[rec.rel] = true
-		if rec.isDir && rec.d.Ignored() {
+		if rec.isDir && blocksDescent(rec.d, rec.bare) {
 			pruned = rec.rel
 		}
 	}
@@ -604,6 +613,229 @@ func TestPolicyWalkerEquivalence(t *testing.T) {
 		if err != nil || d != rec.d {
 			t.Fatalf("match %q: %+v vs walk %+v (%v)", rec.rel, d, rec.d, err)
 		}
+	}
+}
+
+// TestPolicyWalkGitDescent pins the walker to Git's directory-descent rule,
+// verified against live Git traversal in TestLiveGitWalkerPruning: a
+// directory is pruned only when reserved, blocked by an excluded strict
+// ancestor, or excluded by its own bare-directory decision. A canonical
+// slash-form contents exclusion alone (x/* matching x/) never prunes, since
+// deeper negations may still re-include children, while the decision
+// reported for the directory itself remains its canonical slash-form result.
+func TestPolicyWalkGitDescent(t *testing.T) {
+	defaultTree := map[string]string{
+		"cache/keep.txt": "",
+		"cache/drop.txt": "",
+	}
+	cases := []struct {
+		name     string
+		rules    string
+		tree     map[string]string // replaces the default tree when set
+		traverse string
+		want     []string
+		actions  map[string]Action
+		lines    map[string]int    // path -> winning rule line
+		blocks   map[string]string // path -> blocking ancestor, asserted via Match
+	}{
+		{
+			name:    "glob-contents-with-reinclude",
+			rules:   "/cache/*\n!/cache/keep.txt\n",
+			want:    []string{".gitignore", "cache", "cache/drop.txt", "cache/keep.txt"},
+			actions: map[string]Action{"cache": Exclude, "cache/drop.txt": Exclude, "cache/keep.txt": Include},
+			lines:   map[string]int{"cache": 1, "cache/keep.txt": 2},
+		},
+		{
+			name:    "glob-contents-without-negation",
+			rules:   "/cache/*\n",
+			want:    []string{".gitignore", "cache", "cache/drop.txt", "cache/keep.txt"},
+			actions: map[string]Action{"cache": Exclude, "cache/drop.txt": Exclude, "cache/keep.txt": Exclude},
+		},
+		{
+			name:    "dir-only-exclusion-blocks-descendants",
+			rules:   "/cache/\n!/cache/keep.txt\n",
+			want:    []string{".gitignore", "cache"},
+			actions: map[string]Action{"cache": Exclude},
+			lines:   map[string]int{"cache": 1},
+			blocks:  map[string]string{"cache/keep.txt": "cache"},
+		},
+		{
+			name:    "bare-name-exclusion-blocks-descendants",
+			rules:   "cache\n!cache/keep.txt\n",
+			want:    []string{".gitignore", "cache"},
+			actions: map[string]Action{"cache": Exclude},
+			lines:   map[string]int{"cache": 1},
+			blocks:  map[string]string{"cache/keep.txt": "cache"},
+		},
+		{
+			name:    "negated-parent-stays-traversable",
+			rules:   "!cache\ncache/*\n!cache/keep.txt\n",
+			want:    []string{".gitignore", "cache", "cache/drop.txt", "cache/keep.txt"},
+			actions: map[string]Action{"cache": Exclude, "cache/drop.txt": Exclude, "cache/keep.txt": Include},
+			lines:   map[string]int{"cache": 2, "cache/keep.txt": 3},
+		},
+		{
+			name:    "dir-exclusion-reopened-by-negation",
+			rules:   "cache/\n!cache/\n",
+			want:    []string{".gitignore", "cache", "cache/drop.txt", "cache/keep.txt"},
+			actions: map[string]Action{"cache": NoMatch, "cache/drop.txt": NoMatch, "cache/keep.txt": NoMatch},
+		},
+		{
+			name:    "nested-glob-contents-reinclude",
+			rules:   "/a/b/*\n!/a/b/keep.txt\n",
+			tree:    map[string]string{"a/b/keep.txt": "", "a/b/drop.txt": ""},
+			want:    []string{".gitignore", "a", "a/b", "a/b/drop.txt", "a/b/keep.txt"},
+			actions: map[string]Action{"a": NoMatch, "a/b": Exclude, "a/b/drop.txt": Exclude, "a/b/keep.txt": Include},
+			lines:   map[string]int{"a/b": 1},
+		},
+		{
+			// Git prunes d/sub under both /d/* and /d/** (the pattern
+			// matches the bare subdirectory either way), so the child
+			// negation cannot rescue anything below it.
+			name:  "doublestar-blocks-nested-subdirectory",
+			rules: "/cache/**\n!/cache/sub/keep.txt\n",
+			tree: map[string]string{
+				"cache/keep.txt": "", "cache/drop.txt": "",
+				"cache/sub/keep.txt": "", "cache/sub/drop.txt": "",
+			},
+			want:    []string{".gitignore", "cache", "cache/drop.txt", "cache/keep.txt", "cache/sub"},
+			actions: map[string]Action{"cache": Exclude, "cache/drop.txt": Exclude, "cache/keep.txt": Exclude, "cache/sub": Exclude},
+			lines:   map[string]int{"cache": 1, "cache/sub": 1},
+			blocks:  map[string]string{"cache/sub/keep.txt": "cache/sub"},
+		},
+		{
+			// Reopening the subdirectory restores full discovery below it:
+			// the star glob cannot reach two levels down, so deeper
+			// entries and their negations stay live (Git: all untracked
+			// except cache/drop.txt).
+			name:  "glob-contents-reopened-subdirectory",
+			rules: "/cache/*\n!/cache/sub/\n!/cache/sub/deep/keep.txt\n",
+			tree: map[string]string{
+				"cache/drop.txt":          "",
+				"cache/sub/keep.txt":      "",
+				"cache/sub/deep/keep.txt": "", "cache/sub/deep/drop.txt": "",
+			},
+			want: []string{".gitignore", "cache", "cache/drop.txt", "cache/sub", "cache/sub/deep",
+				"cache/sub/deep/drop.txt", "cache/sub/deep/keep.txt", "cache/sub/keep.txt"},
+			actions: map[string]Action{"cache": Exclude, "cache/drop.txt": Exclude, "cache/sub": NoMatch,
+				"cache/sub/deep": NoMatch, "cache/sub/deep/drop.txt": NoMatch,
+				"cache/sub/deep/keep.txt": Include, "cache/sub/keep.txt": NoMatch},
+			lines: map[string]int{"cache": 1, "cache/sub/deep/keep.txt": 3},
+		},
+		{
+			// Nested sources are discovered and effective beneath a
+			// slash-form-excluded directory; the source file itself is an
+			// ordinary (here ignored) candidate, its deeper negation
+			// outranks the root glob, and its deeper exclusion prunes.
+			name:  "nested-source-beneath-slash-excluded",
+			rules: "/cache/*\n",
+			tree: map[string]string{
+				"cache/.gitignore": "!keep.txt\nsub/\n",
+				"cache/keep.txt":   "", "cache/drop.txt": "", "cache/sub/x": "",
+			},
+			want:    []string{".gitignore", "cache", "cache/.gitignore", "cache/drop.txt", "cache/keep.txt", "cache/sub"},
+			actions: map[string]Action{"cache": Exclude, "cache/.gitignore": Exclude, "cache/drop.txt": Exclude, "cache/keep.txt": Include, "cache/sub": Exclude},
+			lines:   map[string]int{"cache": 1, "cache/.gitignore": 1, "cache/drop.txt": 1, "cache/keep.txt": 1, "cache/sub": 2},
+			blocks:  map[string]string{"cache/sub/x": "cache/sub"},
+		},
+		{
+			// Exclusion, reopening and re-exclusion across nested scopes:
+			// depth decides within the per-directory rank, so a/out is
+			// traversable while a/b/out is pruned (Git: ?? a/out/f,
+			// !! a/b/out/).
+			name:  "cross-scope-reopen-reexclude",
+			rules: "out/\n",
+			tree: map[string]string{
+				"a/.gitignore": "!out/\n", "a/b/.gitignore": "out/\n",
+				"a/top": "", "a/out/f": "", "a/b/out/f": "",
+			},
+			want: []string{".gitignore", "a", "a/.gitignore", "a/b", "a/b/.gitignore",
+				"a/b/out", "a/out", "a/out/f", "a/top"},
+			actions: map[string]Action{"a": NoMatch, "a/out": NoMatch, "a/out/f": NoMatch,
+				"a/b/out": Exclude, "a/top": NoMatch},
+			lines:  map[string]int{"a/b/out": 1},
+			blocks: map[string]string{"a/b/out/f": "a/b/out"},
+		},
+		{
+			name:     "subtree-root-reopened-directory",
+			rules:    "out/\n",
+			tree:     map[string]string{"a/.gitignore": "!out/\n", "a/out/f": ""},
+			traverse: "a/out",
+			want:     []string{"a/out/f"},
+		},
+		{
+			// A subtree root below a re-excluded directory is blocked by
+			// its own bare exclusion, like any traversal of it.
+			name:     "subtree-root-reexcluded-directory",
+			rules:    "out/\n",
+			tree:     map[string]string{"a/.gitignore": "!out/\n", "a/b/.gitignore": "out/\n", "a/b/out/f": ""},
+			traverse: "a/b/out",
+			want:     nil,
+		},
+		{
+			name:     "subtree-root-slash-excluded-still-walked",
+			rules:    "/cache/*\n!/cache/keep.txt\n",
+			traverse: "cache",
+			want:     []string{"cache/drop.txt", "cache/keep.txt"},
+			actions:  map[string]Action{"cache/drop.txt": Exclude, "cache/keep.txt": Include},
+		},
+		{
+			name:     "subtree-root-bare-excluded-visits-nothing",
+			rules:    "/cache/\n!/cache/keep.txt\n",
+			traverse: "cache",
+			want:     nil,
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			tree := map[string]string{".gitignore": c.rules}
+			files := defaultTree
+			if c.tree != nil {
+				files = c.tree
+			}
+			for k, v := range files {
+				tree[k] = v
+			}
+			root := t.TempDir()
+			writeTree(t, root, tree)
+			p := testPolicy(t, root, []SourceSpec{{Filename: ".gitignore", Rank: RankPerDirectory, Optional: true, Nested: true}})
+			got, err := collectWalk(t, p, c.traverse)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var rels []string
+			actions := map[string]Action{}
+			for _, rec := range got {
+				rels = append(rels, rec.rel)
+				actions[rec.rel] = rec.d.Action
+			}
+			if strings.Join(rels, ",") != strings.Join(c.want, ",") {
+				t.Fatalf("visits [%s] want [%s]", strings.Join(rels, ","), strings.Join(c.want, ","))
+			}
+			for rel, action := range c.actions {
+				if actions[rel] != action {
+					t.Fatalf("action %q = %d want %d (all: %v)", rel, actions[rel], action, actions)
+				}
+			}
+			for _, rec := range got {
+				line, want := c.lines[rec.rel]
+				if !want {
+					continue
+				}
+				if rec.d.Rule == nil {
+					t.Fatalf("%q has no winning rule, want line %d: %+v", rec.rel, line, rec.d)
+				}
+				if rec.d.Rule.Line() != line {
+					t.Fatalf("%q winning rule line %d want %d: %+v", rec.rel, rec.d.Rule.Line(), line, rec.d)
+				}
+			}
+			for path, ancestor := range c.blocks {
+				d := policyAction(t, p, path, false)
+				if d.Block == nil || d.Block.Directory != ancestor || !d.Ignored() {
+					t.Fatalf("block %q: %+v want ancestor %q", path, d.Decision, ancestor)
+				}
+			}
+		})
 	}
 }
 

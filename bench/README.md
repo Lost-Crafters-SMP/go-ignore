@@ -134,21 +134,28 @@ endpoints. `git-pkgs` also matched everywhere. Divergences found:
   `mixed-100`, 3/266 on `wild-100`), and cannot express directory
   endpoints (25 dir queries on `dir-100` are API-limited, counted
   separately, not timed as equivalents).
-- **Walker corner (Git itself is torn):** directories excluded only
-  through a non-dirOnly slash pattern (`bin/*`) are pruned by go-ignore's
-  walker — which follows `check-ignore`'s trailing-slash directory verdict
-  (`bin/` → ignored) — while `git-pkgs` descends the way `git status`
-  traversal does, re-including content such as `!bin/keep` inside. Git's
-  own interfaces disagree here: `git check-ignore bin` says not-ignored,
-  `git check-ignore bin/` says ignored, `git status --ignored -uall`
-  descends and lists `?? bin/keep`. On the real moby tree this produces
-  exactly 2 differing walk entries (`vendor/**/hcsshim/bin`,
-  `vendor/**/distribution/bin`), both verified to be this corner by the
-  oracle (`TestWalkerEquivalence`); no unexplained walk divergences exist.
-  Consequence: a consumer that must reproduce `git status` output exactly
-  can miss re-includable files under `x/*`-style patterns with go-ignore's
-  current walker. This is the documented traversal contract, not strict-ancestor
-  blocking; see [the specification](../docs/spec/README.md#filesystem-policy-and-traversal).
+- **Walker descent rule (corrected):** the walker prunes exactly where Git's
+  own traversal prunes (reserved paths, excluded strict ancestors and
+  bare-directory self-exclusions) and descends through directories excluded
+  only in canonical slash form (a contents glob such as `bin/*` matching
+  `bin/`), where `git status` also descends and re-includes content such as
+  `!bin/keep`. The decision reported for such a directory remains its
+  canonical slash-form verdict (`check-ignore bin/`); that is a matching
+  contract, not a traversal decision. `TestWalkerEquivalence` verifies
+  included-file discovery against `git ls-files --cached --others
+  --exclude-standard` less `git ls-files --cached --ignored
+  --exclude-standard` (rule-based discovery semantics, since a walker has
+  no index; exact set equality on `nested-d8` and the full moby tree) with
+  git-pkgs as a secondary file-set cross-check. Directory entries
+  are not compared across libraries: git-pkgs silently skips ignored
+  directories and has no canonical directory semantics, so its reporting
+  conventions must not define go-ignore's contract; directory callback
+  semantics are verified against Git itself by the main module's
+  differential tests. Previously the walker pruned canonical slash-form
+  exclusions as well and missed re-includable files under `x/*`-style
+  patterns (2 walk entries on moby); the historical transcripts in
+  `results/` predate the correction. See
+  [the specification](../docs/spec/README.md#filesystem-policy-and-traversal).
 
 ## Results summary
 
