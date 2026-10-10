@@ -56,7 +56,7 @@ jobs:
         if: runner.os == 'Windows'
         with:
           msystem: UCRT64
-          install: mingw-w-ucrt-x86_64-gcc
+          install: mingw-w64-ucrt-x86_64-gcc
       - name: Windows race compiler
         if: runner.os == 'Windows'
         shell: pwsh
