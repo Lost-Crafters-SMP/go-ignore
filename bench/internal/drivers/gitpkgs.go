@@ -12,15 +12,20 @@ import (
 // text alone.
 type GitPkgs struct{}
 
-func (GitPkgs) Name() string  { return "git-pkgs" }
+// Name identifies this driver in benchmark results.
+func (GitPkgs) Name() string { return "git-pkgs" }
+
+// DirHint reports support for directory endpoint queries.
 func (GitPkgs) DirHint() bool { return true }
 
+// CompileRules compiles rule text without filesystem discovery.
 func (GitPkgs) CompileRules(text []byte) (any, error) {
 	m := gitpkgs.New("")
 	m.AddPatterns(text, "")
 	return m, nil
 }
 
+// Match returns the ignored verdict for a compiled matcher.
 func (GitPkgs) Match(c any, path string, isDir bool) bool {
 	return c.(*gitpkgs.Matcher).MatchPath(path, isDir)
 }

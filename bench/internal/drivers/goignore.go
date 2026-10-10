@@ -12,9 +12,13 @@ import (
 // value is part of the library's real per-call cost and is not hidden.
 type GoIgnore struct{}
 
-func (GoIgnore) Name() string  { return "go-ignore" }
+// Name identifies this driver in benchmark results.
+func (GoIgnore) Name() string { return "go-ignore" }
+
+// DirHint reports support for directory endpoint queries.
 func (GoIgnore) DirHint() bool { return true }
 
+// CompileRules compiles rule text without filesystem discovery.
 func (GoIgnore) CompileRules(text []byte) (any, error) {
 	m, _, err := ignore.Compile([]ignore.Source{{Label: "bench", Data: text}}, ignore.Options{})
 	if err != nil {
@@ -23,6 +27,7 @@ func (GoIgnore) CompileRules(text []byte) (any, error) {
 	return m, nil
 }
 
+// Match returns the ignored verdict for a compiled matcher.
 func (GoIgnore) Match(c any, path string, isDir bool) bool {
 	m := c.(*ignore.Matcher)
 	d, err := m.Match(path, isDir)

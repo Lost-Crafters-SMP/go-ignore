@@ -88,6 +88,9 @@ jobs:
           go-version-file: go.mod
           cache: true
           cache-dependency-path: go.sum
+      - uses: jdx/mise-action@v5
+      - name: Code quality
+        run: mise exec -- hk check --all --safe
       # Pinned via the go.mod tool directive; fails the job on any reachable
       # vulnerability. Downloads the vulnerability database at run time.
       - name: Vulnerability scan
@@ -98,3 +101,13 @@ jobs:
         run: go test . -run '^$' -fuzz '^FuzzPatternEquivalence$' -fuzztime=1000000x -parallel=4 -timeout=900s
       - name: Benchmark smoke
         run: go test . -run '^$' -bench '^Benchmark' -benchmem -benchtime=1x -timeout=180s
+
+  # This module replaces the library with ../, so root changes also affect it.
+  # Static validation requires no comparative benchmark dataset preparation.
+  bench-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v5
+      - name: Benchmark module quality
+        run: mise exec -- hk check --all --profile bench --step bench-build --step bench-lint --step bench-tidy --safe

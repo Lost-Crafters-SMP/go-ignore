@@ -161,7 +161,7 @@ func BenchmarkTier2Walk(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
 				n := 0
-				err := p.Walk("", func(rel string, isDir bool, d ignore.PolicyDecision) error {
+				err := p.Walk("", func(rel string, _ bool, _ ignore.PolicyDecision) error {
 					sinkString = rel
 					n++
 					return nil
@@ -178,7 +178,7 @@ func BenchmarkTier2Walk(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
 				n := 0
-				err := gitpkgs.Walk(tree.Root, func(path string, d fs.DirEntry) error {
+				err := gitpkgs.Walk(tree.Root, func(path string, _ fs.DirEntry) error {
 					sinkString = path
 					n++
 					return nil

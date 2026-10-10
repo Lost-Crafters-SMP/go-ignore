@@ -69,7 +69,7 @@ func CheckDirForms(dir, cache, path string) (plain, slash bool, err error) {
 	if err != nil {
 		var exit *exec.ExitError
 		if !errors.As(err, &exit) || exit.ExitCode() != 1 {
-			return false, false, fmt.Errorf("git check-ignore: %v stderr=%s", err, stderr.String())
+			return false, false, fmt.Errorf("git check-ignore: %w stderr=%s", err, stderr.String())
 		}
 	}
 	ignored := map[string]bool{}
@@ -107,7 +107,7 @@ func Init(dir, cache string) error {
 		cmd.Dir = dir
 		cmd.Env = env
 		if out, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("git %v: %v: %s", args, err, out)
+			return fmt.Errorf("git %v: %w: %s", args, err, out)
 		}
 		return nil
 	}
@@ -169,7 +169,7 @@ func Label(dir, cache string, queries []dataset.Query) error {
 	if err != nil {
 		var exit *exec.ExitError
 		if !errors.As(err, &exit) || exit.ExitCode() != 1 {
-			return fmt.Errorf("git check-ignore: %v stderr=%s", err, stderr.String())
+			return fmt.Errorf("git check-ignore: %w stderr=%s", err, stderr.String())
 		}
 	}
 	ignored := map[string]bool{}

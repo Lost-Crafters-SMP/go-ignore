@@ -45,7 +45,7 @@ func PrepareMoby(dst string) (skipped int, err error) {
 	if err != nil {
 		return 0, fmt.Errorf("download %s: %w", mobyURL, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }() // Read errors are handled below.
 	if resp.StatusCode != http.StatusOK {
 		return 0, fmt.Errorf("download %s: status %d", mobyURL, resp.StatusCode)
 	}
@@ -53,7 +53,7 @@ func PrepareMoby(dst string) (skipped int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	defer gz.Close()
+	defer func() { _ = gz.Close() }() // Closing a gzip reader does not validate its checksum.
 	tr := tar.NewReader(gz)
 	for {
 		hdr, err := tr.Next()
@@ -110,7 +110,7 @@ func writeFile(target string, r io.Reader, size int64) error {
 		return err
 	}
 	if _, err := io.CopyN(f, r, size); err != nil {
-		f.Close()
+		_ = f.Close() // Preserve the copy error.
 		return err
 	}
 	return f.Close()

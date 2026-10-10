@@ -15,14 +15,19 @@ import (
 // equivalents.
 type Sabhiram struct{}
 
-func (Sabhiram) Name() string  { return "sabhiram" }
+// Name identifies this driver in benchmark results.
+func (Sabhiram) Name() string { return "sabhiram" }
+
+// DirHint reports that this driver's API cannot express directory endpoints.
 func (Sabhiram) DirHint() bool { return false }
 
+// CompileRules compiles rule text without filesystem discovery.
 func (Sabhiram) CompileRules(text []byte) (any, error) {
 	lines := strings.Split(strings.TrimSuffix(strings.ReplaceAll(string(text), "\r\n", "\n"), "\n"), "\n")
 	return sabhiram.CompileIgnoreLines(lines...), nil
 }
 
-func (Sabhiram) Match(c any, path string, isDir bool) bool {
+// Match returns the ignored verdict; directory hints cannot be passed to this API.
+func (Sabhiram) Match(c any, path string, _ bool) bool {
 	return c.(*sabhiram.GitIgnore).MatchesPath(path)
 }

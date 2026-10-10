@@ -19,8 +19,9 @@ Licensed under [Apache-2.0](LICENSE.txt).
 
 ```
 mise install     # after approving: mise trust
-mise run fmt
-mise run check   # build, fmt:check, lint, test, tidy:check
+mise exec -- hk fix
+mise exec -- hk check --all # formatting, build, lint, tidy and repository hygiene
+mise run test              # tests remain independent of code-quality checks
 ```
 
 Additional checks use the pinned tools:
@@ -28,6 +29,9 @@ Additional checks use the pinned tools:
 ```sh
 mise run test:race # requires a C compiler
 mise run vuln     # requires network access
+mise exec -- hk check --all --step lint
+mise exec -- hk check --all --profile bench # static checks; no datasets needed
+mise exec -- hk fix --all --profile dependencies --step tidy # explicit dependency edits
 # With IGNORE_LIVE_GIT=1 (external Git >=2.52):
 mise exec -- go test . -run '^TestLiveGit' -count=1 -timeout=300s
 # With IGNORE_RESOURCE=1:

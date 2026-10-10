@@ -2,18 +2,22 @@
 go = "1.27.1"
 golangci-lint = "2.14.0"
 hk = "2.5.0"
+actionlint = "1.7.12"
+
+[env]
+GOWORK = "off"
 
 [tasks.build]
 description = "Build all library packages"
-run = "go build ./..."
+run = "hk check --all --step build"
 
 [tasks.test]
 description = "Run all tests"
-run = "go test ./..."
+run = "go test ./... -count=1 -timeout=120s"
 
 [tasks."test:race"]
 description = "Run tests with the race detector (requires a C compiler)"
-run = "go test -race ./..."
+run = "go test -race ./... -count=1 -timeout=180s"
 
 [tasks.coverage]
 description = "Run tests and write coverage.out"
@@ -21,15 +25,15 @@ run = "go test -coverprofile=coverage.out ./..."
 
 [tasks.fmt]
 description = "Format Go source and imports"
-run = "golangci-lint fmt ./..."
+run = "hk fix --all --step format"
 
 [tasks."fmt:check"]
 description = "Check Go formatting without modifying files"
-run = "golangci-lint fmt --diff ./..."
+run = "hk check --all --step format --step format-policy --step bench-format-policy"
 
 [tasks.lint]
 description = "Run golangci-lint"
-run = "golangci-lint run ./..."
+run = "hk check --all --step lint"
 
 [tasks.vuln]
 description = "Scan for reachable Go vulnerabilities (network required)"
@@ -37,15 +41,19 @@ run = "go tool govulncheck ./..."
 
 [tasks.tidy]
 description = "Tidy module dependencies"
-run = "go mod tidy"
+run = "hk fix --all --profile dependencies --step tidy"
 
 [tasks."tidy:check"]
 description = "Check module dependencies without modifying files"
-run = "go mod tidy -diff"
+run = "hk check --all --step tidy"
 
 [tasks.check]
-description = "Run all non-mutating checks"
-depends = ["build", "fmt:check", "lint", "test", "tidy:check"]
+description = "Run all source-non-mutating quality checks (tests are separate)"
+run = "hk check --all"
+
+[tasks."check:bench"]
+description = "Run quality checks including the comparative benchmark module (no datasets needed)"
+run = "hk check --all --profile bench"
 
 [tasks."hooks:install"]
 description = "Install repository-local Git hooks with mise integration"

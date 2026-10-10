@@ -1,39 +1,195 @@
 amends "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Builtins.pkl"
 
 min_hk_version = "2.5.0"
+jobs = 2
+env { ["GOWORK"] = "off" }
 
-steps {
-  ["format"] {
-    glob = "**/*.go"
-    check_diff = new Command {
-      argv = List("mise", "exec", "--", "golangci-lint", "fmt", "--diff", "{{files}}")
-    }
-    fix = new Command {
-      argv = List("mise", "exec", "--", "golangci-lint", "fmt", "{{files}}")
-    }
+// Patterns select triggers, not the footprint of a whole-module command.
+local tooling = List(".golangci.yml", "hk.pkl", "mise.toml", "mise.lock")
+local rootInputs = List("**/*.go", "**/*.c", "**/*.h", "**/*.s", "**/*.syso", "go.mod", "go.sum") + tooling
+local benchInputs = rootInputs + List("bench/go.mod", "bench/go.sum")
+
+local format = Builtins.golangci_lint_fmt
+local formatPolicy = new Step {
+  glob = tooling
+  depends = "format"
+  check = new CommandSpec {
+    command = new Command { argv = List("golangci-lint", "fmt", "--diff", "./...") }
+    effect = "read"
   }
-  ["lint"] {
-    glob = List("**/*.go", "go.mod", "go.sum", ".golangci.yml")
-    depends = "format"
-    check = new Command {
-      argv = List("mise", "run", "lint")
-    }
+}
+// Keep trigger paths repository-relative: dir="bench" would discard root changes.
+local benchFormatPolicy = (formatPolicy) {
+  check = new CommandSpec {
+    command = new Command { argv = List("mise", "exec", "--cd", "bench", "--", "golangci-lint", "fmt", "--diff", "--config", "../.golangci.yml", "./...") }
+    effect = "write" // The mise launcher can update its environment/tool caches.
+  }
+}
+local build = new Step {
+  glob = rootInputs
+  exclude = List("bench/**")
+  batch = false
+  depends = "format"
+  check = new CommandSpec {
+    command = new Command { argv = List("go", "build", "./...") }
+    effect = "write"
+  }
+}
+local lint = (Builtins.golangci_lint) {
+  glob = rootInputs
+  exclude = List("bench/**")
+  dir = null
+  workspace_indicator = null
+  batch = false
+  depends = "format"
+  fix = null
+  check = new CommandSpec {
+    command = new Command { argv = List("golangci-lint", "run", "--fix=false", "--concurrency=2", "./...") }
+    effect = "write"
+  }
+}
+local tidy = (Builtins.gomod_tidy) {
+  glob = rootInputs
+  exclude = List("bench/**")
+  dir = null
+  workspace_indicator = null
+  batch = false
+  depends = "format"
+  // Removing fix alone still leaves an applicable patch in fix mode.
+  check = Builtins.gomod_tidy.check_diff
+  check_diff = null
+  fix = null
+  stage = null
+}
+local tidyFix = (Builtins.gomod_tidy) {
+  glob = rootInputs
+  exclude = List("bench/**")
+  dir = null
+  workspace_indicator = null
+  batch = false
+  profiles = List("dependencies")
+  // Manifest writes extend beyond the selected source files.
+  exclusive = true
+  depends = "format"
+}
+local benchBuild = (build) {
+  glob = benchInputs
+  exclude = List()
+  profiles = List("bench")
+  check = new CommandSpec {
+    command = new Command { argv = List("go", "-C", "bench", "build", "./...") }
+    effect = "write"
+  }
+}
+local benchLint = (lint) {
+  glob = benchInputs
+  exclude = List()
+  profiles = List("bench")
+  // golangci-lint's own global lock otherwise rejects concurrent module runs.
+  depends = List("format", "lint")
+  check = new CommandSpec {
+    command = new Command { argv = List("mise", "exec", "--cd", "bench", "--", "golangci-lint", "run", "--fix=false", "--concurrency=2", "--config", "../.golangci.yml", "./...") }
+    effect = "write"
+  }
+}
+local benchTidy = (tidy) {
+  glob = benchInputs
+  exclude = List()
+  profiles = List("bench")
+  check = new CommandSpec {
+    command = new Command { argv = List("go", "-C", "bench", "mod", "tidy", "-diff") }
+    effect = "write"
+  }
+}
+local benchTidyFix = (tidyFix) {
+  glob = benchInputs
+  exclude = List()
+  profiles = List("bench", "dependencies")
+  check_diff = new CommandSpec {
+    command = new Command { argv = List("go", "-C", "bench", "mod", "tidy", "-diff") }
+    effect = "write"
+  }
+  // Module diffs name go.mod/go.sum relative to bench, not the repository root.
+  apply_check_diff = false
+  fix = new CommandSpec {
+    command = new Command { argv = List("go", "-C", "bench", "mod", "tidy") }
+    effect = "write"
+  }
+  stage = List("bench/go.mod", "bench/go.sum")
+}
+local test = new Step {
+  glob = rootInputs + List("docs/spec/**", "testdata/**")
+  exclude = List("bench/**")
+  batch = false
+  check = new CommandSpec {
+    command = new Command { argv = List("mise", "run", "test") }
+    effect = "write"
+  }
+}
+local actions = (Builtins.actionlint) {
+  glob = List(".github/workflows/*.yml", ".github/workflows/*.yaml", ".github/actionlint.yaml", ".github/actionlint.yml", "hk.pkl", "mise.toml", "mise.lock")
+  batch = false
+  // The configuration can trigger this too; it is not itself a workflow.
+  check = new CommandSpec {
+    command = new Command { argv = List("actionlint") }
+    effect = "read"
   }
 }
 
 hooks {
-  ["pre-push"] {
+  ["check"] {
+    fix = false
+    stage = false
+    stash = "none"
     steps {
-      ["test"] {
-        check = new Command {
-          argv = List("mise", "run", "test")
-        }
-      }
-      ["tidy"] {
-        check = new Command {
-          argv = List("mise", "run", "tidy:check")
-        }
-      }
+      ["format"] = format
+      ["format-policy"] = formatPolicy
+      ["bench-format-policy"] = benchFormatPolicy
+      ["build"] = build
+      ["lint"] = lint
+      ["tidy"] = tidy
+      ["conflicts"] = Builtins.check_merge_conflict
+      ["private-keys"] = Builtins.detect_private_key
+      ["case-conflicts"] = Builtins.check_case_conflict
+      ["actions"] = actions
+      ["bench-build"] = benchBuild
+      ["bench-lint"] = benchLint
+      ["bench-tidy"] = benchTidy
+    }
+  }
+  ["fix"] {
+    fix = true
+    stage = false
+    stash = "none"
+    steps {
+      ["format"] = format
+      ["tidy"] = tidyFix
+      ["bench-tidy"] = benchTidyFix
+    }
+  }
+  ["pre-commit"] {
+    fix = true
+    stage = true
+    stash = "git"
+    steps {
+      ["format"] = format
+      ["format-policy"] = formatPolicy
+      ["bench-format-policy"] = benchFormatPolicy
+      ["lint"] = lint
+      ["conflicts"] = Builtins.check_merge_conflict
+      ["private-keys"] = Builtins.detect_private_key
+      ["case-conflicts"] = Builtins.check_case_conflict
+      ["actions"] = actions
+    }
+  }
+  ["pre-push"] {
+    fix = false
+    stage = false
+    stash = "none"
+    steps {
+      ["test"] = test
+      ["tidy"] = (tidy) { depends = List() }
     }
   }
 }

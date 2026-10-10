@@ -36,10 +36,19 @@ func TestMain(m *testing.M) {
 		fmt.Fprintln(os.Stderr, "bench:", err)
 		os.Exit(1)
 	}
-	os.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	if err := os.Setenv("GIT_CONFIG_NOSYSTEM", "1"); err != nil {
+		fmt.Fprintln(os.Stderr, "bench:", err)
+		os.Exit(1)
+	}
 	empty := filepath.Join(cache, "empty-config")
-	os.Setenv("GIT_CONFIG_GLOBAL", empty)
-	os.Setenv("XDG_CONFIG_HOME", filepath.Join(cache, "xdg"))
+	if err := os.Setenv("GIT_CONFIG_GLOBAL", empty); err != nil {
+		fmt.Fprintln(os.Stderr, "bench:", err)
+		os.Exit(1)
+	}
+	if err := os.Setenv("XDG_CONFIG_HOME", filepath.Join(cache, "xdg")); err != nil {
+		fmt.Fprintln(os.Stderr, "bench:", err)
+		os.Exit(1)
+	}
 	manifest, err = dataset.Load(cache)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "bench:", err)
@@ -54,7 +63,6 @@ var (
 	sinkDecision any
 	sinkString   string
 	sinkInt      int
-	sinkErr      error
 )
 
 // policyMatch reduces a policy decision to the comparable ignored verdict.
