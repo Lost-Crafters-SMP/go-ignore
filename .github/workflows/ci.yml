@@ -1,8 +1,18 @@
 name: CI
 
+# Routine validation. PR branches run only on the pull_request event; push is
+# limited to main so a commit in a PR is never verified twice. A newer run on
+# the same ref cancels the superseded one. Scheduled and manual extended
+# verification lives in verify.yml and shares neither trigger nor group.
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -14,6 +24,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       # GitHub's Windows runners put the workspace and RUNNER_TEMP on a fast
@@ -76,13 +87,18 @@ jobs:
           IGNORE_RESOURCE: "1"
         run: go test . -run '^Test(KillableScaling|RetainedLiteralMemory|RetainedRuleSets|DefaultCapBoundaries)$' -count=1 -v -timeout=180s
 
-  # Quality gates that add no platform-specific coverage: govulncheck performs
-  # source-level analysis on the library module. Fuzz and benchmark checks
-  # exercise the matching core; its specification is in docs/spec/.
+  # Quality gates that add no platform-specific coverage. The benchmark
+  # module's quality checks are consolidated here: that module replaces the
+  # library with ../, so root changes reach it through hk's bench profile.
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+      # setup-go provides the go.sum-keyed build and module caches for the go
+      # steps below; mise provides the pinned hk, golangci-lint and actionlint.
+      # mise also installs go from its own (cached) store: excluding it would
+      # make `mise exec` fail on the unmet go entry in mise.toml.
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
@@ -91,23 +107,17 @@ jobs:
       - uses: jdx/mise-action@v5
       - name: Code quality
         run: mise exec -- hk check --all --safe
+      - name: Benchmark module quality
+        run: mise exec -- hk --profile bench check --all --step bench-build --step bench-lint --step bench-tidy --safe
       # Pinned via the go.mod tool directive; fails the job on any reachable
       # vulnerability. Downloads the vulnerability database at run time.
       - name: Vulnerability scan
         run: go tool govulncheck ./...
+      # Exploration smoke only; nightly deep budgets over every fuzz target
+      # run in verify.yml.
       - name: Parser ownership fuzz
-        run: go test . -run '^$' -fuzz '^FuzzParserOwnership$' -fuzztime=1000000x -parallel=4 -timeout=900s
+        run: go test . -run '^$' -fuzz '^FuzzParserOwnership$' -fuzztime=100000x -parallel=4 -timeout=900s
       - name: Independent pattern equivalence fuzz
-        run: go test . -run '^$' -fuzz '^FuzzPatternEquivalence$' -fuzztime=1000000x -parallel=4 -timeout=900s
+        run: go test . -run '^$' -fuzz '^FuzzPatternEquivalence$' -fuzztime=100000x -parallel=4 -timeout=900s
       - name: Benchmark smoke
         run: go test . -run '^$' -bench '^Benchmark' -benchmem -benchtime=1x -timeout=180s
-
-  # This module replaces the library with ../, so root changes also affect it.
-  # Static validation requires no comparative benchmark dataset preparation.
-  bench-quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: jdx/mise-action@v5
-      - name: Benchmark module quality
-        run: mise exec -- hk check --all --profile bench --step bench-build --step bench-lint --step bench-tidy --safe
