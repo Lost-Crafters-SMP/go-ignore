@@ -44,6 +44,9 @@ type builderState struct {
 	// batchWild stages a batch's wildcard positions. Both are scratch.
 	shift     []int32
 	batchWild []int32
+	// orderBatch stages a batch's new scope IDs for the length-ordered index;
+	// like shift it is scratch and released at Build.
+	orderBatch []int32
 	// hints counts a batch's literal rules per scope, anchored first, so new
 	// literal maps are presized exactly like one-shot index construction.
 	hints map[int32][2]int
@@ -157,6 +160,7 @@ func (s *builderState) commit(rules []*Rule, diagnostics []Diagnostic) {
 		}
 		r.scopeID = gi
 	}
+	s.orderScopes()
 	oldN := len(m.rules)
 	start := oldN
 	if len(rules) > 0 && oldN > 0 {
@@ -180,6 +184,56 @@ func (s *builderState) commit(rules []*Rule, diagnostics []Diagnostic) {
 	}
 	s.mergeWild(rules)
 	s.indexLiterals(rules)
+}
+
+// orderScopes merges this batch's newly appended scope groups into the
+// length-ordered index. Scope IDs are stable and groups only ever append, so
+// earlier merges never need repairing and rule splicing cannot disturb the
+// order; matchers with no scopes keep no index. Called inside the infallible
+// commit, after Add's validation and fault points.
+func (s *builderState) orderScopes() {
+	m := s.m
+	added := len(m.scopes) - len(m.scopeOrder)
+	if added <= 0 {
+		return
+	}
+	if len(m.scopeOrder) == 0 {
+		// The first published scope builds the index whole.
+		m.scopeOrder = make([]int32, len(m.scopes))
+		for i := range m.scopeOrder {
+			m.scopeOrder[i] = int32(i)
+		}
+		slices.SortFunc(m.scopeOrder, m.compareScopeOrder)
+		return
+	}
+	s.orderBatch = slices.Grow(s.orderBatch[:0], added)[:added]
+	for i := range s.orderBatch {
+		s.orderBatch[i] = int32(len(m.scopeOrder) + i)
+	}
+	if added == 1 {
+		// Single-scope batches (the common lazy-discovery shape) insert by
+		// binary search instead of sorting a one-element batch.
+		at, _ := slices.BinarySearchFunc(m.scopeOrder, s.orderBatch[0], m.compareScopeOrder)
+		old := len(m.scopeOrder)
+		m.scopeOrder = slices.Grow(m.scopeOrder, 1)[:old+1]
+		copy(m.scopeOrder[at+1:], m.scopeOrder[at:old])
+		m.scopeOrder[at] = s.orderBatch[0]
+		return
+	}
+	slices.SortFunc(s.orderBatch, m.compareScopeOrder)
+	old := len(m.scopeOrder)
+	m.scopeOrder = slices.Grow(m.scopeOrder, added)[:old+added]
+	i, j, out := old-1, added-1, len(m.scopeOrder)-1
+	for j >= 0 {
+		if i >= 0 && m.compareScopeOrder(m.scopeOrder[i], s.orderBatch[j]) > 0 {
+			m.scopeOrder[out] = m.scopeOrder[i]
+			i--
+		} else {
+			m.scopeOrder[out] = s.orderBatch[j]
+			j--
+		}
+		out--
+	}
 }
 
 // spliceRules merges a batch into the priority-ordered rule slice from its
@@ -389,6 +443,7 @@ func (b *Builder) Build() (*Matcher, []Diagnostic) {
 		s.scopeOf = nil
 		s.shift = nil
 		s.batchWild = nil
+		s.orderBatch = nil
 		s.hints = nil
 		s.comp = compiler{}
 		s.preCommit = nil

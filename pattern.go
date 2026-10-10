@@ -229,7 +229,11 @@ type evalScratch struct {
 	rows [2][]bool
 	fold [256]byte
 	// elig caches per-scope-group eligibility across the ancestor calls of one
-	// Match, backed by fixed storage for common scope counts.
+	// Match, backed by fixed storage for common scope counts. One query's
+	// flags are established by decide's boundary activation and consumed by
+	// the winner scans; they are kept as a caller-local slice rather than a
+	// field, because a slice into this struct would force the whole
+	// call-local scratch onto the heap.
 	eligFixed [64]bool
 	elig      []bool
 }

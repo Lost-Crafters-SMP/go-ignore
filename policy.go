@@ -224,7 +224,7 @@ func (p *Policy) decide(rel string, isDir bool) (d PolicyDecision, bareExclude b
 			if s.depth >= j+1 {
 				continue
 			}
-			if r := s.matcher.bareWinner(prefix, base, true, &scratch, true); r != nil && (best == nil || ruleOutranks(r, best)) {
+			if r := s.matcher.bareWinner(prefix, base, true, &scratch, true, nil); r != nil && (best == nil || ruleOutranks(r, best)) {
 				best = r
 			}
 		}
@@ -240,7 +240,7 @@ func (p *Policy) decide(rel string, isDir bool) (d PolicyDecision, bareExclude b
 	}
 	var r *Rule
 	for s := state; s != nil; s = s.parent {
-		if cand := s.matcher.bareWinner(rel, base, isDir, &scratch, true); cand != nil && (r == nil || ruleOutranks(cand, r)) {
+		if cand := s.matcher.bareWinner(rel, base, isDir, &scratch, true, nil); cand != nil && (r == nil || ruleOutranks(cand, r)) {
 			r = cand
 		}
 	}
@@ -250,7 +250,7 @@ func (p *Policy) decide(rel string, isDir bool) (d PolicyDecision, bareExclude b
 			// The canonical slash-form evaluation replaces the bare result.
 			r = nil
 			for s := state; s != nil; s = s.parent {
-				if cand := s.matcher.scanWinner(rel, true, true, &scratch); cand != nil && (r == nil || ruleOutranks(cand, r)) {
+				if cand := s.matcher.scanWinner(rel, true, true, &scratch, true, nil); cand != nil && (r == nil || ruleOutranks(cand, r)) {
 					r = cand
 				}
 			}

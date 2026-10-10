@@ -167,6 +167,7 @@ func builderMatcherCopy(m *Matcher) *Matcher {
 		out.scopes[i].anchored = maps.Clone(out.scopes[i].anchored)
 	}
 	out.wild = slices.Clone(m.wild)
+	out.scopeOrder = slices.Clone(m.scopeOrder)
 	out.diagnostics = slices.Clone(m.diagnostics)
 	return &out
 }

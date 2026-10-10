@@ -189,7 +189,8 @@ func TestSpecFixtures(t *testing.T) {
 				t.Fatal(err)
 			}
 			if c.Query.NoSlash {
-				r := m.winner(c.Query.Path, true, false, nil)
+				var scratch evalScratch
+				r := m.winner(c.Query.Path, true, false, &scratch, naiveEligibility(m, &scratch, c.Query.Path))
 				checkRecord(t, r, c.Expected)
 				return
 			}
@@ -436,7 +437,7 @@ func TestLiveGitSpec(t *testing.T) {
 				ancestor := c.Query.Path[:i]
 				observed := o.query(t, ancestor)
 				probes++
-				r := m.winner(ancestor, true, false, nil)
+				r := m.winner(ancestor, true, false, nil, naiveEligibility(m, nil, ancestor))
 				checkRecord(t, r, observed)
 				if first == nil && observed.Ignored {
 					first = &fixtureBlock{Directory: ancestor, Source: observed.Source, Line: observed.Line, Pattern: observed.Pattern}

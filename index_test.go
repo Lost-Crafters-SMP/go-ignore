@@ -9,8 +9,39 @@ import (
 	"testing"
 )
 
+// eligible reports whether a non-slash candidate path lies strictly inside
+// the scope. Production evaluation derives the same answer from boundary
+// activation; this direct predicate keeps the differential oracle
+// independent of that machinery.
+func (g *scopeGroup) eligible(path string, fold bool) bool {
+	return g.scope == "" || scopeEligible(path, g.scope, fold)
+}
+
+// scopeEligible is the per-rule equivalent of scopeGroup.eligible.
+func scopeEligible(path, scope string, fold bool) bool {
+	return len(path) > len(scope) && path[len(scope)] == '/' && equalBytes(path[:len(scope)], scope, fold)
+}
+
+// naiveEligibility computes per-scope containment directly, without the
+// production length-ordered index or activation cursor, so the differential
+// oracle checks boundary activation by construction rather than reusing it.
+// A nil scratch is allowed and allocates, which suits test callers.
+func naiveEligibility(m *Matcher, scratch *evalScratch, path string) []bool {
+	var elig []bool
+	if scratch != nil {
+		elig = scratch.eligibility(len(m.scopes))
+	} else {
+		elig = make([]bool, len(m.scopes))
+	}
+	for gi := range m.scopes {
+		elig[gi] = m.scopes[gi].eligible(path, m.fold)
+	}
+	return elig
+}
+
 // refMatch is the exhaustive-scan reference for Match: identical control flow,
-// but every winner lookup uses scanWinner instead of the literal index.
+// but every winner lookup uses scanWinner with naively computed eligibility
+// instead of the boundary-driven flags.
 func refMatch(m *Matcher, path string, isDir bool) (Decision, error) {
 	if err := validatePath(path, false); err != nil {
 		return Decision{}, err
@@ -18,14 +49,14 @@ func refMatch(m *Matcher, path string, isDir bool) (Decision, error) {
 	var scratch evalScratch
 	for i := 0; i < len(path); i++ {
 		if path[i] == '/' {
-			if r := m.scanWinner(path[:i], true, false, &scratch); r != nil && !r.negated {
+			if r := m.scanWinner(path[:i], true, false, &scratch, false, naiveEligibility(m, &scratch, path[:i])); r != nil && !r.negated {
 				return Decision{Block: &Block{Directory: path[:i], Rule: r}}, nil
 			}
 		}
 	}
-	r := m.scanWinner(path, isDir, false, &scratch)
+	r := m.scanWinner(path, isDir, false, &scratch, false, naiveEligibility(m, &scratch, path))
 	if isDir && (r == nil || r.negated) {
-		r = m.scanWinner(path, true, true, &scratch)
+		r = m.scanWinner(path, true, true, &scratch, false, naiveEligibility(m, &scratch, path))
 	}
 	if r == nil {
 		return Decision{}, nil

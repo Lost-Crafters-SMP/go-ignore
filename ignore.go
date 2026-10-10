@@ -109,14 +109,57 @@ type scopeGroup struct {
 	base                     map[string]litEntry
 }
 
-// eligible reports whether a non-slash candidate path lies inside the scope.
-func (g *scopeGroup) eligible(path string, fold bool) bool {
-	return g.scope == "" || scopeEligible(path, g.scope, fold)
+// compareScopeOrder orders scope-group IDs by scope byte length, breaking ties
+// by ID so construction stays deterministic. ASCII folding preserves length,
+// so the order holds for folded and unfolded matchers alike.
+func (m *Matcher) compareScopeOrder(a, b int32) int {
+	la, lb := len(m.scopes[a].scope), len(m.scopes[b].scope)
+	if la != lb {
+		if la < lb {
+			return -1
+		}
+		return 1
+	}
+	if a < b {
+		return -1
+	}
+	if a > b {
+		return 1
+	}
+	return 0
 }
 
-// scopeEligible is the per-rule equivalent of scopeGroup.eligible.
-func scopeEligible(path, scope string, fold bool) bool {
-	return len(path) > len(scope) && path[len(scope)] == '/' && equalBytes(path[:len(scope)], scope, fold)
+// initEligibility prepares one query's scope flags: only the root scope
+// applies before any directory boundary is crossed. It returns the first
+// index of scopeOrder not yet considered by activate. The flags live in the
+// call-local scratch storage, so no matcher state is written.
+func (m *Matcher) initEligibility(elig []bool) (next int) {
+	if len(m.scopeOrder) > 0 && m.scopes[m.scopeOrder[0]].scope == "" {
+		elig[m.scopeOrder[0]] = true
+		return 1
+	}
+	return 0
+}
+
+// activate marks scopes whose bytes equal the directory prefix just evaluated,
+// so their rules apply to every candidate below it. next is the first index of
+// scopeOrder not yet considered: prefixes arrive in increasing length order,
+// matching the length-sorted index, so scopes shorter than the prefix that did
+// not match can never match a longer one and are skipped permanently. Equal
+// lengths alone prove nothing; the bytes are compared with folding.
+func (m *Matcher) activate(prefix string, elig []bool, next int) int {
+	order := m.scopeOrder
+	for ; next < len(order); next++ {
+		id := order[next]
+		scope := m.scopes[id].scope
+		if len(scope) > len(prefix) {
+			return next
+		}
+		if len(scope) == len(prefix) && equalBytes(scope, prefix, m.fold) {
+			elig[id] = true
+		}
+	}
+	return next
 }
 
 // Source returns the source label.
@@ -169,6 +212,11 @@ type Matcher struct {
 	// during Compile and only read afterwards.
 	scopes []scopeGroup
 	wild   []int32
+	// scopeOrder permutes scope-group IDs by scope byte length (ties by ID) so
+	// evaluation activates scopes at crossed directory boundaries instead of
+	// recomputing prefix containment per candidate. It stays nil for matchers
+	// with no scopes at all.
+	scopeOrder []int32
 }
 
 func validatePath(path string, root bool) error {
@@ -520,6 +568,13 @@ func (m *Matcher) buildIndex() {
 			m.wild = append(m.wild, r.idx)
 		}
 	}
+	if len(m.scopes) > 0 {
+		m.scopeOrder = make([]int32, len(m.scopes))
+		for i := range m.scopeOrder {
+			m.scopeOrder[i] = int32(i)
+		}
+		slices.SortFunc(m.scopeOrder, m.compareScopeOrder)
+	}
 	// Presize the exact-match maps per scope to avoid repeated map growth.
 	anchoredCount := make([]int, len(m.scopes))
 	baseCount := make([]int, len(m.scopes))
@@ -637,18 +692,27 @@ func (m *Matcher) decide(path string, isDir bool) (d Decision, bareExclude bool,
 		return Decision{}, false, fmt.Errorf("path: %w", err)
 	}
 	var scratch evalScratch
+	// Per-scope eligibility is established once per crossed directory boundary
+	// and reused by every later candidate: each scope's prefix containment is
+	// verified exactly once, when the boundary it would own is evaluated.
+	elig := scratch.eligibility(len(m.scopes))
+	next := m.initEligibility(elig)
 	for i := 0; i < len(path); i++ {
 		if path[i] == '/' {
-			if r := m.winner(path[:i], true, false, &scratch); r != nil && !r.negated {
-				return Decision{Block: &Block{Directory: path[:i], Rule: r}}, false, nil
+			prefix := path[:i]
+			if r := m.winner(prefix, true, false, &scratch, elig); r != nil && !r.negated {
+				return Decision{Block: &Block{Directory: prefix, Rule: r}}, false, nil
 			}
+			// A scope equal to this ancestor applies only below it, never to
+			// the ancestor's own bare decision just taken above.
+			next = m.activate(prefix, elig, next)
 		}
 	}
-	r := m.winner(path, isDir, false, &scratch)
+	r := m.winner(path, isDir, false, &scratch, elig)
 	bareExclude = isDir && r != nil && !r.negated
 	if isDir && !bareExclude {
 		// The canonical slash-form evaluation replaces the bare result.
-		r = m.winner(path, true, true, &scratch)
+		r = m.winner(path, true, true, &scratch, elig)
 	}
 	if r == nil {
 		return Decision{}, bareExclude, nil
@@ -719,42 +783,36 @@ func lookupLiteral(index map[string]litEntry, key string, fold bool, buf []byte)
 
 // winner returns the highest-priority matching rule. Non-slash calls use the
 // literal index: exact-match rules are resolved per eligible scope, and only
-// wildcard candidates ranked above the best literal hit are scanned.
-func (m *Matcher) winner(path string, isDir, slash bool, scratch *evalScratch) *Rule {
+// wildcard candidates ranked above the best literal hit are scanned. elig is
+// the caller-maintained scope eligibility of this query.
+func (m *Matcher) winner(path string, isDir, slash bool, scratch *evalScratch, elig []bool) *Rule {
 	if scratch == nil {
 		scratch = new(evalScratch)
 	}
 	if slash {
-		return m.scanWinner(path, isDir, true, scratch)
+		return m.scanWinner(path, isDir, true, scratch, false, elig)
 	}
 	at := strings.LastIndexByte(path, '/')
-	return m.bareWinner(path, path[at+1:], isDir, scratch, false)
+	return m.bareWinner(path, path[at+1:], isDir, scratch, false, elig)
 }
 
 // bareWinner is the non-slash winner with the candidate basename precomputed
-// and optional structural eligibility: when allEligible is set, every scope
-// group is known to contain path (the policy layer establishes this from the
-// scope chain), so per-group byte comparisons are skipped.
-func (m *Matcher) bareWinner(path, base string, isDir bool, scratch *evalScratch, allEligible bool) *Rule {
+// and caller-supplied eligibility: either allEligible reports that every scope
+// group contains path (the policy layer establishes this from the scope
+// chain), or elig holds this query's per-group flags as established at crossed
+// directory boundaries. The winner never recomputes prefix containment.
+func (m *Matcher) bareWinner(path, base string, isDir bool, scratch *evalScratch, allEligible bool, elig []bool) *Rule {
 	if scratch == nil {
 		scratch = new(evalScratch)
 	}
 	best := int32(idxNone)
 	var bestRule *Rule
 	buf := scratch.fold[:0]
-	var elig []bool
-	if !allEligible {
-		elig = scratch.eligibility(len(m.scopes))
-	}
 	for gi := range m.scopes {
-		g := &m.scopes[gi]
-		if !allEligible {
-			ok := g.eligible(path, m.fold)
-			elig[gi] = ok
-			if !ok {
-				continue
-			}
+		if !allEligible && !elig[gi] {
+			continue
 		}
+		g := &m.scopes[gi]
 		rel := path[g.strip:]
 		if len(g.anchored) > 0 && len(rel) >= g.anchoredMin && len(rel) <= g.anchoredMax {
 			entry, hit, newBuf := lookupLiteral(g.anchored, rel, m.fold, buf)
@@ -810,7 +868,12 @@ func (m *Matcher) bareWinner(path, base string, isDir bool, scratch *evalScratch
 // scanWinner is the exhaustive reverse-priority scan. It serves the directory
 // slash-form endpoint call, whose virtual trailing separator defeats exact-match
 // lookup, and acts as the differential reference for the indexed path.
-func (m *Matcher) scanWinner(path string, isDir, slash bool, scratch *evalScratch) *Rule {
+// Eligibility is caller-supplied like bareWinner's: scopes shorter than the
+// endpoint were verified when their boundary was crossed, while a scope
+// exactly as long as the endpoint — never a crossed boundary — is verified on
+// first reach and remembered, so same-length sibling scopes never need an
+// eager bucket comparison.
+func (m *Matcher) scanWinner(path string, isDir, slash bool, scratch *evalScratch, allEligible bool, elig []bool) *Rule {
 	if scratch == nil {
 		scratch = new(evalScratch)
 	}
@@ -821,18 +884,26 @@ func (m *Matcher) scanWinner(path string, isDir, slash bool, scratch *evalScratc
 		}
 		rel := path
 		if r.scope != "" {
-			if len(path) < len(r.scope) || !equalBytes(path[:len(r.scope)], r.scope, m.fold) {
+			if len(path) < len(r.scope) {
 				continue
 			}
 			if len(path) == len(r.scope) {
+				// The endpoint itself may be a scope; only the canonical
+				// slash form can apply such a rule.
 				if !slash {
 					continue
 				}
-				rel = ""
-			} else {
-				if path[len(r.scope)] != '/' {
-					continue
+				if !allEligible && !elig[r.scopeID] {
+					if !equalBytes(path, r.scope, m.fold) {
+						continue
+					}
+					elig[r.scopeID] = true
 				}
+				rel = ""
+			} else if !allEligible && !elig[r.scopeID] {
+				continue
+			} else {
+				// Activation or structure guarantees the separator.
 				rel = path[len(r.scope)+1:]
 			}
 		}
