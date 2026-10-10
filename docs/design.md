@@ -57,6 +57,11 @@ positive bare self-decision supplies a directory endpoint's exclusion; otherwise
 the canonical slash-form winner supplies its action and metadata. This distinction
 keeps endpoint exclusions separate from strict-ancestor blocks.
 
+`Match` and `Descend` share one evaluation (`Matcher.decide`): the decision is
+identical, and `Descend` reports the bare-directory self-exclusion beside
+ancestor blocking as Git's descent verdict, so consumers that precompile their
+sources prune without re-evaluating or probing.
+
 ## Filesystem policy
 
 `policy.go` resolves and copies configuration in `NewPolicy` without opening files.
@@ -99,7 +104,8 @@ canonical decision at no extra matching cost. A canonical slash-form exclusion
 alone (contents excluded, the directory itself not) leaves the directory
 traversable, so `bin/*` with `!bin/keep` discovers the child exactly as
 `git status` does, while the decision reported for `bin/` remains the canonical
-slash-form result. See the
+slash-form result. `Matcher.Descend` exposes the same verdict from precompiled
+rules for consumers that own their traversal. See the
 [specification](spec/README.md#filesystem-policy-and-traversal) and
 [benchmark methodology](../bench/README.md#correctness-verification).
 

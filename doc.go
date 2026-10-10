@@ -7,8 +7,12 @@
 // Compile owns its source bytes and returns an immutable Matcher suitable for
 // concurrent use. Match accepts clean slash-relative byte paths. Directory
 // endpoints use canonical slash-form semantics; only bare strict-ancestor
-// exclusions establish a Block. A directory endpoint exclusion is not a pruning
-// decision for the core matcher. CaseFold performs ASCII-only folding.
+// exclusions establish a Block. A directory endpoint exclusion alone is not a
+// pruning decision: Descend returns Match(path, true)'s decision together
+// with Git's traversal verdict — false only for a blocking strict ancestor or
+// the directory's own bare-directory self-exclusion — so consumers that own
+// their walking prune exactly like Policy.Walk. CaseFold performs ASCII-only
+// folding.
 //
 // Compile builds a per-scope literal index and a priority-ordered wildcard
 // list; ordinary short matches allocate nothing.

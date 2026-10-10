@@ -549,32 +549,73 @@ func (m *Matcher) Diagnostics() []Diagnostic {
 
 // Match evaluates a clean slash-relative byte path with no I/O.
 func (m *Matcher) Match(path string, isDir bool) (Decision, error) {
+	d, _, err := m.decide(path, isDir)
+	return d, err
+}
+
+// decide is the shared evaluation behind Match and Descend. Beyond the
+// decision, it reports bareExclude: for a directory endpoint without a
+// block, the bare-directory winner is a positive exclusion and therefore
+// supplies the endpoint decision. That is exactly the condition under
+// which Git declines to descend into the directory; a canonical
+// slash-form exclusion alone is not, because deeper negations may still
+// re-include the directory's children.
+func (m *Matcher) decide(path string, isDir bool) (d Decision, bareExclude bool, err error) {
 	if m == nil {
-		return Decision{}, fmt.Errorf("nil matcher: %w", ErrInvalidInput)
+		return Decision{}, false, fmt.Errorf("nil matcher: %w", ErrInvalidInput)
 	}
 	if err := validatePath(path, false); err != nil {
-		return Decision{}, fmt.Errorf("path: %w", err)
+		return Decision{}, false, fmt.Errorf("path: %w", err)
 	}
 	var scratch evalScratch
 	for i := 0; i < len(path); i++ {
 		if path[i] == '/' {
 			if r := m.winner(path[:i], true, false, &scratch); r != nil && !r.negated {
-				return Decision{Block: &Block{Directory: path[:i], Rule: r}}, nil
+				return Decision{Block: &Block{Directory: path[:i], Rule: r}}, false, nil
 			}
 		}
 	}
 	r := m.winner(path, isDir, false, &scratch)
-	if isDir && (r == nil || r.negated) {
+	bareExclude = isDir && r != nil && !r.negated
+	if isDir && !bareExclude {
+		// The canonical slash-form evaluation replaces the bare result.
 		r = m.winner(path, true, true, &scratch)
 	}
 	if r == nil {
-		return Decision{}, nil
+		return Decision{}, bareExclude, nil
 	}
 	action := Exclude
 	if r.negated {
 		action = Include
 	}
-	return Decision{Action: action, Rule: r}, nil
+	return Decision{Action: action, Rule: r}, bareExclude, nil
+}
+
+// Descend evaluates the directory at path once and reports whether Git's
+// traversal would descend into it, alongside that directory's canonical
+// decision: d is always identical to Match(path, true). descend is false
+// exactly when a strict ancestor is excluded (d.Block != nil) or the
+// directory's own bare-directory decision positively excludes it — the
+// conditions under which Git descends no further and no deeper negation
+// can re-include anything. A canonical slash-form exclusion alone (the
+// directory's contents, not itself, such as /cache/* matching cache)
+// leaves descend true, so deeper negations may still re-include children,
+// exactly as in git status traversal; the decision reported for such a
+// directory remains its canonical result.
+//
+// path follows Match's input contract: a clean slash-relative path naming
+// the directory, without a trailing separator. The traversal root itself
+// has no path below the source scopes and is rejected like any other
+// invalid input; callers evaluate their roots separately. Reserved paths
+// are the caller's concern. Descend performs no filesystem access or
+// policy discovery, is safe for concurrent use, and a zero-value matcher
+// descends everywhere.
+func (m *Matcher) Descend(path string) (d Decision, descend bool, err error) {
+	d, bareExclude, err := m.decide(path, true)
+	if err != nil {
+		return Decision{}, false, err
+	}
+	return d, d.Block == nil && !bareExclude, nil
 }
 
 // lookupLiteral resolves an exact-match key, folding it first when needed. The

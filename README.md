@@ -65,6 +65,38 @@ Diagnostics use `MalformedPattern` and `OversizeSource` kinds. Invalid API input
 wrap `ErrInvalidInput`; malformed rules are inert, while oversized sources are
 wholly skipped. A zero-value matcher is usable.
 
+### Directory descent
+
+`Descend` answers Git's traversal question for consumers that own their
+filesystem walking: whether a directory may be entered, evaluated in the same
+pass as its canonical decision.
+
+```go
+matcher, _, _ := ignore.Compile([]ignore.Source{{
+    Label: ".gitignore", Rank: ignore.RankPerDirectory,
+    Data: []byte("build/\nbin/*\n!bin/keep\n"),
+}}, ignore.Options{})
+
+d, descend, _ := matcher.Descend("build")
+// d.Action == ignore.Exclude and descend == false: build itself is
+// bare-excluded, no deeper negation can re-include anything, so a walker
+// prunes it.
+
+d, descend, _ = matcher.Descend("bin")
+// d.Action == ignore.Exclude yet descend == true: only bin's contents are
+// excluded (bin/* matching the canonical slash form), so bin/keep is still
+// discoverable, exactly as in git status traversal.
+```
+
+`d` is always identical to `Match(path, true)`. `descend` is false only for a
+blocking strict ancestor (`d.Block != nil`) or the directory's own
+bare-directory self-exclusion — the conditions under which Git descends no
+further, and the exact pruning predicate `Policy.Walk` applies. Reserved paths
+and the traversal root itself remain the caller's concern: `Descend` follows
+`Match`'s input contract (the root has no path below the source scopes),
+performs no filesystem access or policy discovery, and a zero-value matcher
+descends everywhere.
+
 ## Policy and traversal API
 
 ```go

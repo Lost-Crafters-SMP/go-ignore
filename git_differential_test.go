@@ -335,8 +335,10 @@ func TestLiveGitLayeredPolicy(t *testing.T) {
 // TestLiveGitWalkerPruning checks the walker end to end against real Git
 // filesystem traversal: the files the walker discovers equal the files
 // `git status --porcelain --ignored=matching -uall` lists, directories are
-// pruned exactly where Git collapses them to a `!! dir/` entry, and every
-// reported decision agrees with Git's check-ignore verdict for that path.
+// pruned exactly where Git collapses them to a `!! dir/` entry, every
+// reported decision agrees with Git's check-ignore verdict for that path,
+// and a matcher precompiled from the same sources returns matching
+// Descend verdicts for every directory.
 func TestLiveGitWalkerPruning(t *testing.T) {
 	requireLiveGit(t)
 	files := map[string]string{
@@ -570,6 +572,113 @@ func checkLiveGitWalker(t *testing.T, o *layeredOracle) {
 			t.Fatal("traversal root reported")
 		}
 	}
+
+	// Matcher-level descent verdicts agree with Git's traversal for
+	// consumers that precompile every source and own their walking: a
+	// directory Git collapsed to `!! dir/` is pruned by its own rules
+	// (bare self-exclusion: Exclude with a rule and no block), while a
+	// directory below a collapsed one is unreachable only because an
+	// ancestor is excluded (Block names a Git-collapsed ancestor).
+	m := cumulativeLayeredMatcher(t, o)
+	for _, e := range all {
+		if !e.isDir || e.rel == ".git" || strings.HasPrefix(e.rel, ".git/") {
+			continue // reserved namespace, outside the matcher's rules
+		}
+		d, descend, err := m.Descend(e.rel)
+		if err != nil {
+			t.Fatal(err)
+		}
+		blockedAncestor := false
+		rest := e.rel
+		for {
+			at := strings.LastIndexByte(rest, '/')
+			if at < 0 {
+				break
+			}
+			parent := rest[:at]
+			if parent == ".git" || gitPruned[parent] {
+				blockedAncestor = true
+				break
+			}
+			rest = parent
+		}
+		switch {
+		case blockedAncestor:
+			if descend || d.Block == nil || !gitPruned[d.Block.Directory] {
+				t.Fatalf("%q lies under a git-pruned ancestor: descend=%v decision=%+v block=%v",
+					e.rel, descend, d, d.Block)
+			}
+		case gitPruned[e.rel]:
+			if descend || d.Block != nil || d.Action != Exclude || d.Rule == nil {
+				t.Fatalf("%q is git-pruned by its own rules: descend=%v decision=%+v",
+					e.rel, descend, d)
+			}
+		default:
+			if !descend {
+				t.Fatalf("git traverses %q but descend=false: %+v", e.rel, d)
+			}
+		}
+	}
+}
+
+// cumulativeLayeredMatcher precompiles every layered source of the oracle
+// into one matcher: global excludes and info/exclude at their fixed root
+// ranks, plus every nested .gitignore scoped to its directory. This is the
+// precompiled-rules shape of the walker's predicate; same-rank ties across
+// scopes are decided by scope depth, so nested order cannot change results
+// and lexicographic order keeps compilation deterministic.
+func cumulativeLayeredMatcher(t *testing.T, o *layeredOracle) *Matcher {
+	t.Helper()
+	read := func(full string) []byte {
+		data, err := os.ReadFile(full)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return data
+	}
+	sources := []Source{
+		{Label: "global-excludes", Rank: RankGlobal, Data: read(o.globalPath)},
+		{Label: ".git/info/exclude", Rank: RankInfoExclude, Data: read(filepath.Join(o.dir, ".git", "info", "exclude"))},
+	}
+	var nested []string
+	err := filepath.WalkDir(o.dir, func(full string, e fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(o.dir, full)
+		if err != nil {
+			return err
+		}
+		rel = filepath.ToSlash(rel)
+		if rel == ".git" {
+			return filepath.SkipDir
+		}
+		if !e.IsDir() && e.Name() == ".gitignore" {
+			nested = append(nested, rel)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	slices.Sort(nested)
+	for _, rel := range nested {
+		scope := ""
+		if at := strings.LastIndexByte(rel, '/'); at >= 0 {
+			scope = rel[:at]
+		}
+		sources = append(sources, Source{
+			Label: rel,
+			Scope: scope,
+			Rank:  RankPerDirectory,
+			Data:  read(filepath.Join(o.dir, filepath.FromSlash(rel))),
+		})
+	}
+	m, _, err := Compile(sources, Options{CaseFold: o.fold})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return m
 }
 
 func sortedKeys(m map[string]bool) []string {

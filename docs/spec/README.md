@@ -30,6 +30,14 @@ are project semantics and need independent tests rather than fabricated Git answ
 - `(*Matcher).Match(path string, isDir bool) (Decision, error)`, pure and safe
   for concurrent calls. Zero-value matcher is usable and empty; nil receiver
   returns an API error. No caller input mutation or shared mutable scratch.
+- `(*Matcher).Descend(path string) (Decision, bool, error)`: one evaluation of
+  a directory endpoint whose `Decision` is identical to `Match(path, true)`.
+  The bool is Git's descent verdict — false only when the decision carries a
+  strict-ancestor `Block` or the endpoint's own positive bare-directory
+  self-decision supplies its Exclude. A canonical slash-form exclusion alone
+  never blocks descent. Inputs follow the Match contract; the traversal root
+  is not a valid query and callers evaluate roots themselves. Pure,
+  concurrent, no I/O; reserved paths are outside the matcher's rules.
 - `(*Matcher).Diagnostics() []Diagnostic`: detached values in deterministic
   source/line/kind order, stable source-sequence tie-breaking.
 - `Action`: `NoMatch`, `Exclude`, `Include` (zero is NoMatch).
@@ -240,6 +248,9 @@ as `bin/*` matching `bin/`) remains traversable: `bin/*` followed by
 `bin/keep`, matching `git status` traversal, while the decision reported for
 `bin` itself remains the canonical slash-form result (excluded by `bin/*`).
 Canonical directory matching and traversal blocking are distinct contracts.
+`Matcher.Descend` exposes this descent verdict for precompiled rules, so
+consumers that own their traversal prune exactly like the walker without
+filesystem access or policy discovery.
 File discovery is verified against real Git traversal (`git status
 --ignored=matching -uall` and `git ls-files --cached --others
 --exclude-standard`) in the live Git and benchmark correctness tests. See the
